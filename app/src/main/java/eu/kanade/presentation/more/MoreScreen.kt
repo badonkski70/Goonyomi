@@ -20,6 +20,7 @@ import androidx.compose.ui.res.vectorResource
 import eu.kanade.domain.ui.model.NavStyle
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.common.Constants
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
@@ -37,8 +38,8 @@ fun MoreScreen(
     onDownloadedOnlyChange: (Boolean) -> Unit,
     incognitoMode: Boolean,
     onIncognitoModeChange: (Boolean) -> Unit,
-    navStyle: NavStyle,
-    onClickAlt: () -> Unit,
+    moreTabs: List<Tab>,
+    onClickAlt: (Tab) -> Unit,
     onClickDownloadQueue: () -> Unit,
     onClickCategories: () -> Unit,
     onClickStats: () -> Unit,
@@ -78,12 +79,14 @@ fun MoreScreen(
 
             item { HorizontalDivider() }
 
-            item {
-                TextPreferenceWidget(
-                    title = navStyle.moreTab.options.title,
-                    icon = navStyle.moreIcon,
-                    onPreferenceClick = onClickAlt,
-                )
+            moreTabs.forEach { moreTab ->
+                item {
+                    TextPreferenceWidget(
+                        title = moreTab.options.title,
+                        icon = NavStyle.moreTabIcon(moreTab),
+                        onPreferenceClick = { onClickAlt(moreTab) },
+                    )
+                }
             }
 
             item {

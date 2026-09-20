@@ -26,6 +26,7 @@ class SetAnimeDefaultEpisodeFlags(
                     displayMode = displayEpisodeByNameOrNumber().get(),
                     showPreviews = showEpisodeThumbnailPreviews().get(),
                     showSummaries = showEpisodeSummaries().get(),
+                    showMissingCount = showEpisodeMissingCount().get(),
                 )
             }
         }

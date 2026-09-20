@@ -560,7 +560,11 @@ private fun AnimeScreenSmallImpl(
                                 FetchType.Seasons -> seasons.size
                                 FetchType.Episodes -> episodes.size
                             },
-                            missingItemsCount = maxOf(missingEpisodesCount, missingSeasonsCount),
+                            missingItemsCount = if (state.anime.showMissingCount()) {
+                                maxOf(missingEpisodesCount, missingSeasonsCount)
+                            } else {
+                                0
+                            },
                             onClick = onFilterClicked,
                             isManga = false,
                             fetchType = state.anime.fetchType,
@@ -900,8 +904,12 @@ fun AnimeScreenLargeImpl(
                                         FetchType.Seasons -> seasons.size
                                         FetchType.Episodes -> episodes.size
                                     },
-                                    missingItemsCount = maxOf(missingEpisodesCount, missingSeasonsCount),
-                                    onClick = onFilterButtonClicked,
+missingItemsCount = if (state.anime.showMissingCount()) {
+                                maxOf(missingEpisodesCount, missingSeasonsCount)
+                            } else {
+                                0
+                            },
+                            onClick = onFilterButtonClicked,
                                     isManga = false,
                                     fetchType = state.anime.fetchType,
                                     modifier = Modifier.ignorePadding(offsetGridPaddingPx),

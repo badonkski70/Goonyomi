@@ -36,6 +36,7 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.domain.ui.model.NavStyle
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
@@ -76,11 +77,23 @@ object HomeScreen : Screen() {
 
     private val uiPreferences: UiPreferences by injectLazy()
     private val defaultTab = uiPreferences.startScreen().get().tab
-    private val moreTab = uiPreferences.navStyle().get().moreTab
 
     @Composable
     override fun Content() {
-        val navStyle by uiPreferences.navStyle().collectAsState()
+        val showAnime by uiPreferences.showAnimeTab().collectAsState()
+        val showManga by uiPreferences.showMangaLibraryTab().collectAsState()
+        val showUpdates by uiPreferences.showUpdatesTab().collectAsState()
+        val showHistory by uiPreferences.showHistoryTab().collectAsState()
+        val showBrowse by uiPreferences.showBrowseTab().collectAsState()
+        val orderRaw by uiPreferences.tabOrder().collectAsState()
+        val tabsConfig = NavStyle.tabsConfig(
+            order = NavStyle.parseOrder(orderRaw),
+            showAnime = showAnime,
+            showManga = showManga,
+            showUpdates = showUpdates,
+            showHistory = showHistory,
+            showBrowse = showBrowse,
+        )
         val navigator = LocalNavigator.currentOrThrow
         TabNavigator(
             tab = defaultTab,
@@ -92,7 +105,7 @@ object HomeScreen : Screen() {
                     startBar = {
                         if (isTabletUi()) {
                             NavigationRail {
-                                navStyle.tabs.fastForEach {
+                                tabsConfig.visibleTabs.fastForEach {
                                     NavigationRailItem(it)
                                 }
                             }
@@ -104,12 +117,12 @@ object HomeScreen : Screen() {
                                 showBottomNavEvent.receiveAsFlow().collectLatest { value = it }
                             }
                             AnimatedVisibility(
-                                visible = bottomNavVisible && tabNavigator.current != navStyle.moreTab,
+                                visible = bottomNavVisible && tabNavigator.current !in tabsConfig.moreTabs,
                                 enter = expandVertically(),
                                 exit = shrinkVertically(),
                             ) {
                                 NavigationBar {
-                                    navStyle.tabs.fastForEach {
+                                    tabsConfig.visibleTabs.fastForEach {
                                         NavigationBarItem(it)
                                     }
                                 }
@@ -142,16 +155,12 @@ object HomeScreen : Screen() {
                 }
             }
 
+            val startTarget = if (defaultTab !in tabsConfig.moreTabs) defaultTab else tabsConfig.visibleTabs.first()
             val goToStartScreen = {
-                if (defaultTab != moreTab) {
-                    tabNavigator.current = defaultTab
-                } else {
-                    tabNavigator.current = AnimeLibraryTab
-                }
+                tabNavigator.current = startTarget
             }
             BackHandler(
-                enabled = (tabNavigator.current == moreTab || tabNavigator.current != defaultTab) &&
-                    (tabNavigator.current != AnimeLibraryTab || defaultTab != moreTab),
+                enabled = tabNavigator.current in tabsConfig.moreTabs || tabNavigator.current != startTarget,
                 onBack = goToStartScreen,
             )
 

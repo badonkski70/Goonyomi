@@ -16,17 +16,17 @@ import java.util.Locale
 class UiPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
-
     fun themeMode() = preferenceStore.getEnum("pref_theme_mode_key", ThemeMode.SYSTEM)
 
-    fun appTheme() = preferenceStore.getEnum(
-        "pref_app_theme",
-        if (DeviceUtil.isDynamicColorAvailable) {
-            AppTheme.MONET
-        } else {
-            AppTheme.DEFAULT
-        },
-    )
+    fun appTheme() =
+        preferenceStore.getEnum(
+            "pref_app_theme",
+            if (DeviceUtil.isDynamicColorAvailable) {
+                AppTheme.MONET
+            } else {
+                AppTheme.DEFAULT
+            },
+        )
 
     fun themeDarkAmoled() = preferenceStore.getBoolean("pref_theme_dark_amoled_key", false)
 
@@ -38,12 +38,23 @@ class UiPreferences(
 
     fun startScreen() = preferenceStore.getEnum("start_screen", StartScreen.ANIME)
 
-    fun navStyle() = preferenceStore.getEnum("bottom_rail_nav_style", NavStyle.MOVE_HISTORY_TO_MORE)
+    fun showAnimeTab() = preferenceStore.getBoolean("show_anime_tab", true)
+
+    fun showMangaLibraryTab() = preferenceStore.getBoolean("show_manga_tab", true)
+
+    fun showUpdatesTab() = preferenceStore.getBoolean("show_updates_tab", true)
+
+    fun showHistoryTab() = preferenceStore.getBoolean("show_history_tab", false)
+
+    fun showBrowseTab() = preferenceStore.getBoolean("show_browse_tab", true)
+
+    fun tabOrder() = preferenceStore.getString("tab_order", NavStyle.TAB_ORDER_DEFAULT)
 
     companion object {
-        fun dateFormat(format: String): DateTimeFormatter = when (format) {
-            "" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)
-            else -> DateTimeFormatter.ofPattern(format, Locale.getDefault())
-        }
+        fun dateFormat(format: String): DateTimeFormatter =
+            when (format) {
+                "" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)
+                else -> DateTimeFormatter.ofPattern(format, Locale.getDefault())
+            }
     }
 }

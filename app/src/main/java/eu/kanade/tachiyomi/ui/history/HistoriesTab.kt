@@ -12,7 +12,7 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import eu.kanade.domain.ui.model.NavStyle
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.TabbedScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
@@ -25,21 +25,19 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 data object HistoriesTab : Tab {
+    private val uiPreferences: UiPreferences = Injekt.get()
 
     override val options: TabOptions
         @Composable
         get() {
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_history_enter)
-            val index: UShort = when (currentNavigationStyle()) {
-                NavStyle.MOVE_HISTORY_TO_MORE -> 5u
-                NavStyle.MOVE_BROWSE_TO_MORE -> 3u
-                else -> 2u
-            }
             return TabOptions(
-                index = index,
+                index = 3u,
                 title = stringResource(MR.strings.history),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
@@ -52,7 +50,7 @@ data object HistoriesTab : Tab {
     @Composable
     override fun Content() {
         val context = LocalContext.current
-        val fromMore = currentNavigationStyle() == NavStyle.MOVE_HISTORY_TO_MORE
+        val fromMore = !uiPreferences.showHistoryTab().get()
         // Hoisted for history tab's search bar
         val mangaHistoryScreenModel = rememberScreenModel { MangaHistoryScreenModel() }
         val mangaSearchQuery by mangaHistoryScreenModel.query.collectAsState()
@@ -62,10 +60,11 @@ data object HistoriesTab : Tab {
 
         TabbedScreen(
             titleRes = MR.strings.label_recent_manga,
-            tabs = persistentListOf(
-                animeHistoryTab(context, fromMore),
-                mangaHistoryTab(context, fromMore),
-            ),
+            tabs =
+                persistentListOf(
+                    animeHistoryTab(context, fromMore),
+                    mangaHistoryTab(context, fromMore),
+                ),
             mangaSearchQuery = mangaSearchQuery,
             onChangeMangaSearchQuery = mangaHistoryScreenModel::search,
             animeSearchQuery = animeSearchQuery,

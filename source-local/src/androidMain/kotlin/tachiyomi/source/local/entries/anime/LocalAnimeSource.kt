@@ -235,6 +235,11 @@ actual class LocalAnimeSource(
 
     // Episodes
     private suspend fun getOldEpisodeList(anime: SAnime): List<SEpisode> = withIOContext {
+        // Remove legacy thumbnails that used to be stored next to the videos
+        fileSystem.getFilesInAnimeDirectory(anime.url)
+            .filter { it.isFile && it.name.orEmpty().endsWith("-$DEFAULT_THUMBNAIL_NAME") }
+            .forEach { it.delete() }
+
         val episodesData = fileSystem.getFilesInAnimeDirectory(anime.url)
             .firstOrNull {
                 it.extension == "json" && it.nameWithoutExtension == "episodes"

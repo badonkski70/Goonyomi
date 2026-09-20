@@ -108,6 +108,15 @@ class SetAnimeEpisodeFlags(
         )
     }
 
+    suspend fun awaitShowEpisodeMissingCount(anime: Anime, flag: Long): Boolean {
+        return animeRepository.updateAnime(
+            AnimeUpdate(
+                id = anime.id,
+                episodeFlags = anime.episodeFlags.setFlag(flag, Anime.EPISODE_MISSING_COUNT_MASK),
+            ),
+        )
+    }
+
     suspend fun awaitSetAllFlags(
         animeId: Long,
         unseenFilter: Long,
@@ -119,6 +128,7 @@ class SetAnimeEpisodeFlags(
         displayMode: Long,
         showPreviews: Long,
         showSummaries: Long,
+        showMissingCount: Long,
     ): Boolean {
         return animeRepository.updateAnime(
             AnimeUpdate(
@@ -131,7 +141,8 @@ class SetAnimeEpisodeFlags(
                     .setFlag(sortingDirection, Anime.EPISODE_SORT_DIR_MASK)
                     .setFlag(displayMode, Anime.EPISODE_DISPLAY_MASK)
                     .setFlag(showPreviews, Anime.EPISODE_PREVIEWS_MASK)
-                    .setFlag(showSummaries, Anime.EPISODE_SUMMARIES_MASK),
+                    .setFlag(showSummaries, Anime.EPISODE_SUMMARIES_MASK)
+                    .setFlag(showMissingCount, Anime.EPISODE_MISSING_COUNT_MASK),
             ),
         )
     }

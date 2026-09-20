@@ -11,6 +11,7 @@ import tachiyomi.source.local.io.anime.LocalAnimeSourceFileSystem
 import java.io.InputStream
 
 private const val DEFAULT_THUMBNAIL_NAME = "thumbnail.jpg"
+private const val THUMBNAILS_DIR = ".thumbnails"
 
 actual class LocalEpisodeThumbnailManager(
     private val context: Context,
@@ -18,7 +19,8 @@ actual class LocalEpisodeThumbnailManager(
 ) {
 
     actual fun find(animeUrl: String, fileName: String): UniFile? {
-        return fileSystem.getFilesInAnimeDirectory(animeUrl)
+        return getThumbnailsDirectory(animeUrl)
+            ?.listFiles().orEmpty()
             // Get all file whose names contain the episode name and the word 'thumbnail'
             .filter { it.isFile && it.nameWithoutExtension.equals(fileName, ignoreCase = true) }
             // Get the first actual image
@@ -26,7 +28,7 @@ actual class LocalEpisodeThumbnailManager(
     }
 
     actual fun update(anime: SAnime, episode: SEpisode, inputStream: InputStream): UniFile? {
-        val directory = fileSystem.getAnimeDirectory(anime.url)
+        val directory = getThumbnailsDirectory(anime.url)
         if (directory == null) {
             inputStream.close()
             return null
@@ -41,9 +43,22 @@ actual class LocalEpisodeThumbnailManager(
             }
         }
 
+        // Remove the legacy thumbnail that used to live next to the videos
+        fileSystem.getAnimeDirectory(anime.url)?.findFile(fileName)?.delete()
+
+        // Keep the anime root no-media so the videos stay hidden from the gallery
+        fileSystem.getAnimeDirectory(anime.url)?.let {
+            DiskUtil.createNoMediaFile(it, context)
+        }
         DiskUtil.createNoMediaFile(directory, context)
 
         episode.preview_url = targetFile.uri.toString()
         return targetFile
+    }
+
+    private fun getThumbnailsDirectory(animeUrl: String): UniFile? {
+        val animeDir = fileSystem.getAnimeDirectory(animeUrl) ?: return null
+        return animeDir.findFile(THUMBNAILS_DIR)?.takeIf { it.isDirectory }
+            ?: animeDir.createDirectory(THUMBNAILS_DIR)
     }
 }

@@ -3,7 +3,6 @@ package mihon.core.migration.migrations
 import android.app.Application
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
-import eu.kanade.domain.ui.model.NavStyle
 import eu.kanade.domain.ui.model.StartScreen
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
@@ -27,14 +26,13 @@ class NavigationOptionsMigration : Migration {
             remove("default_home_tab_library")
 
             val startScreen = if (isDefaultTabManga.get()) StartScreen.MANGA else StartScreen.ANIME
-            val navStyle = when (bottomNavStyle.get()) {
-                0 -> NavStyle.MOVE_HISTORY_TO_MORE
-                1 -> NavStyle.MOVE_UPDATES_TO_MORE
-                else -> NavStyle.MOVE_MANGA_TO_MORE
-            }
-
             preferenceStore.getEnum("start_screen", StartScreen.ANIME).set(startScreen)
-            preferenceStore.getEnum("bottom_rail_nav_style", NavStyle.MOVE_HISTORY_TO_MORE).set(navStyle)
+
+            when (bottomNavStyle.get()) {
+                0 -> preferenceStore.getBoolean("show_history_tab", false).set(false)
+                1 -> preferenceStore.getBoolean("show_updates_tab", true).set(false)
+                2 -> preferenceStore.getBoolean("show_manga_tab", true).set(false)
+            }
         }
 
         return true

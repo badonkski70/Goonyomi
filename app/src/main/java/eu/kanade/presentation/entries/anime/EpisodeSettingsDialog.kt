@@ -51,6 +51,7 @@ fun EpisodeSettingsDialog(
     onDisplayGridSizeChanged: (Int) -> Unit,
     onShowPreviewsEnabled: (Long) -> Unit,
     onShowSummariesEnabled: (Long) -> Unit,
+    onShowMissingCountEnabled: (Long) -> Unit,
     onSetAsDefault: (applyToExistingAnime: Boolean) -> Unit,
 ) {
     var showSetAsDefaultDialog by rememberSaveable { mutableStateOf(false) }
@@ -116,6 +117,8 @@ fun EpisodeSettingsDialog(
                         onShowPreviewsEnabled = onShowPreviewsEnabled,
                         showSummaries = anime?.showSummaries() ?: true,
                         onShowSummariesEnabled = onShowSummariesEnabled,
+                        showMissingCount = anime?.showMissingCount() ?: true,
+                        onShowMissingCountEnabled = onShowMissingCountEnabled,
                     )
                 }
             }
@@ -186,6 +189,8 @@ private fun ColumnScope.DisplayPage(
     onShowPreviewsEnabled: (Long) -> Unit,
     showSummaries: Boolean,
     onShowSummariesEnabled: (Long) -> Unit,
+    showMissingCount: Boolean,
+    onShowMissingCountEnabled: (Long) -> Unit,
 ) {
     listOf(
         MR.strings.show_title to Anime.EPISODE_DISPLAY_NAME,
@@ -223,6 +228,12 @@ private fun ColumnScope.DisplayPage(
         label = stringResource(AYMR.strings.show_episode_summaries),
         checked = showSummaries,
         onClick = { onShowSummariesEnabled(showSummariesFlag) },
+    )
+    val showMissingCountFlag = if (showMissingCount) Anime.EPISODE_SHOW_NOT_MISSING_COUNT else Anime.EPISODE_SHOW_MISSING_COUNT
+    CheckboxItem(
+        label = stringResource(AYMR.strings.show_episode_missing_count),
+        checked = showMissingCount,
+        onClick = { onShowMissingCountEnabled(showMissingCountFlag) },
     )
 }
 

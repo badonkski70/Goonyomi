@@ -35,14 +35,13 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
 data object BrowseTab : Tab {
-
     override val options: TabOptions
         @Composable
         get() {
             val isSelected = LocalTabNavigator.current.current is BrowseTab
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_browse_enter)
             return TabOptions(
-                index = 3u,
+                index = 4u,
                 title = stringResource(MR.strings.browse),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
@@ -74,14 +73,15 @@ data object BrowseTab : Tab {
         val animeExtensionsScreenModel = rememberScreenModel { AnimeExtensionsScreenModel() }
         val animeExtensionsState by animeExtensionsScreenModel.state.collectAsState()
 
-        val tabs = persistentListOf(
-            animeSourcesTab(),
-            mangaSourcesTab(),
-            animeExtensionsTab(animeExtensionsScreenModel),
-            mangaExtensionsTab(mangaExtensionsScreenModel),
-            migrateAnimeSourceTab(),
-            migrateMangaSourceTab(),
-        )
+        val tabs =
+            persistentListOf(
+                animeSourcesTab(),
+                mangaSourcesTab(),
+                animeExtensionsTab(animeExtensionsScreenModel),
+                mangaExtensionsTab(mangaExtensionsScreenModel),
+                migrateAnimeSourceTab(),
+                migrateMangaSourceTab(),
+            )
 
         val state = rememberPagerState { tabs.size }
 
@@ -96,7 +96,8 @@ data object BrowseTab : Tab {
             scrollable = true,
         )
         LaunchedEffect(Unit) {
-            switchToTabNumberChannel.receiveAsFlow()
+            switchToTabNumberChannel
+                .receiveAsFlow()
                 .collectLatest { state.scrollToPage(it) }
         }
 

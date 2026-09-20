@@ -18,6 +18,8 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.domain.ui.model.NavStyle
 import eu.kanade.presentation.more.MoreScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
@@ -37,18 +39,18 @@ import kotlinx.coroutines.flow.combine
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 data object MoreTab : Tab {
-
     override val options: TabOptions
         @Composable
         get() {
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_more_enter)
             return TabOptions(
-                index = 4u,
+                index = 5u,
                 title = stringResource(MR.strings.label_more),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
@@ -64,15 +66,30 @@ data object MoreTab : Tab {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { MoreScreenModel() }
         val downloadQueueState by screenModel.downloadQueueState.collectAsState()
-        val navStyle = currentNavigationStyle()
+        val uiPreferences = Injekt.get<UiPreferences>()
+        val showAnime by uiPreferences.showAnimeTab().collectAsState()
+        val showManga by uiPreferences.showMangaLibraryTab().collectAsState()
+        val showUpdates by uiPreferences.showUpdatesTab().collectAsState()
+        val showHistory by uiPreferences.showHistoryTab().collectAsState()
+        val showBrowse by uiPreferences.showBrowseTab().collectAsState()
+        val orderRaw by uiPreferences.tabOrder().collectAsState()
+        val tabsConfig =
+            NavStyle.tabsConfig(
+                order = NavStyle.parseOrder(orderRaw),
+                showAnime = showAnime,
+                showManga = showManga,
+                showUpdates = showUpdates,
+                showHistory = showHistory,
+                showBrowse = showBrowse,
+            )
         MoreScreen(
             downloadQueueStateProvider = { downloadQueueState },
             downloadedOnly = screenModel.downloadedOnly,
             onDownloadedOnlyChange = { screenModel.downloadedOnly = it },
             incognitoMode = screenModel.incognitoMode,
             onIncognitoModeChange = { screenModel.incognitoMode = it },
-            navStyle = navStyle,
-            onClickAlt = { navigator.push(navStyle.moreTab) },
+            moreTabs = tabsConfig.moreTabs,
+            onClickAlt = { navigator.push(it) },
             onClickDownloadQueue = { navigator.push(DownloadsTab) },
             onClickCategories = { navigator.push(CategoriesTab) },
             onClickStats = { navigator.push(StatsTab) },
@@ -90,13 +107,13 @@ private class MoreScreenModel(
     private val animeDownloadManager: AnimeDownloadManager = Injekt.get(),
     preferences: BasePreferences = Injekt.get(),
 ) : ScreenModel {
-
     var downloadedOnly by preferences.downloadedOnly().asState(screenModelScope)
     var incognitoMode by preferences.incognitoMode().asState(screenModelScope)
 
-    private var _downloadQueueState: MutableStateFlow<DownloadQueueState> = MutableStateFlow(
-        DownloadQueueState.Stopped,
-    )
+    private var _downloadQueueState: MutableStateFlow<DownloadQueueState> =
+        MutableStateFlow(
+            DownloadQueueState.Stopped,
+        )
     val downloadQueueState: StateFlow<DownloadQueueState> = _downloadQueueState.asStateFlow()
 
     init {
@@ -115,17 +132,17 @@ private class MoreScreenModel(
                             isRunningAnime,
                             animeDownloadQueue.size,
                         )
-                    }
-                        .collectLatest { (isDownloadingAnime, animeDownloadQueueSize) ->
-                            val isDownloading = isDownloadingAnime || isDownloadingManga
-                            val downloadQueueSize = mangaDownloadQueueSize + animeDownloadQueueSize
-                            val pendingDownloadExists = downloadQueueSize != 0
-                            _downloadQueueState.value = when {
+                    }.collectLatest { (isDownloadingAnime, animeDownloadQueueSize) ->
+                        val isDownloading = isDownloadingAnime || isDownloadingManga
+                        val downloadQueueSize = mangaDownloadQueueSize + animeDownloadQueueSize
+                        val pendingDownloadExists = downloadQueueSize != 0
+                        _downloadQueueState.value =
+                            when {
                                 !pendingDownloadExists -> DownloadQueueState.Stopped
                                 !isDownloading -> DownloadQueueState.Paused(downloadQueueSize)
                                 else -> DownloadQueueState.Downloading(downloadQueueSize)
                             }
-                        }
+                    }
                 }
         }
     }
@@ -133,6 +150,12 @@ private class MoreScreenModel(
 
 sealed interface DownloadQueueState {
     data object Stopped : DownloadQueueState
-    data class Paused(val pending: Int) : DownloadQueueState
-    data class Downloading(val pending: Int) : DownloadQueueState
+
+    data class Paused(
+        val pending: Int,
+    ) : DownloadQueueState
+
+    data class Downloading(
+        val pending: Int,
+    ) : DownloadQueueState
 }

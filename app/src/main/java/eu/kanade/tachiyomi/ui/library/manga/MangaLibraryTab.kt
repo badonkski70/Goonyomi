@@ -29,7 +29,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import eu.kanade.domain.ui.model.NavStyle
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.entries.components.LibraryBottomActionMenu
 import eu.kanade.presentation.library.DeleteLibraryEntryDialog
@@ -64,20 +64,21 @@ import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.source.local.entries.manga.isLocal
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 data object MangaLibraryTab : Tab {
+    private val uiPreferences: UiPreferences = Injekt.get()
 
     @OptIn(ExperimentalAnimationGraphicsApi::class)
     override val options: TabOptions
         @Composable
         get() {
-            val fromMore = currentNavigationStyle() == NavStyle.MOVE_MANGA_TO_MORE
             val title = AYMR.strings.label_manga_library
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_library_enter)
-            val index: UShort = if (fromMore) 5u else 1u
             return TabOptions(
-                index = index,
+                index = 1u,
                 title = stringResource(title),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
@@ -110,29 +111,31 @@ data object MangaLibraryTab : Tab {
             started
         }
 
-        val fromMore = currentNavigationStyle() == NavStyle.MOVE_MANGA_TO_MORE
+        val fromMore = !uiPreferences.showMangaLibraryTab().get()
 
-        val navigateUp: (() -> Unit)? = if (fromMore) {
-            {
-                if (navigator.lastItem == HomeScreen) {
-                    scope.launch { HomeScreen.openTab(HomeScreen.Tab.AnimeLib()) }
-                } else {
-                    navigator.pop()
+        val navigateUp: (() -> Unit)? =
+            if (fromMore) {
+                {
+                    if (navigator.lastItem == HomeScreen) {
+                        scope.launch { HomeScreen.openTab(HomeScreen.Tab.AnimeLib()) }
+                    } else {
+                        navigator.pop()
+                    }
                 }
+            } else {
+                null
             }
-        } else {
-            null
-        }
 
         val defaultTitle = stringResource(AYMR.strings.label_manga_library)
 
         Scaffold(
             topBar = { scrollBehavior ->
-                val title = state.getToolbarTitle(
-                    defaultTitle = defaultTitle,
-                    defaultCategoryTitle = stringResource(MR.strings.label_default),
-                    page = screenModel.activeCategoryIndex,
-                )
+                val title =
+                    state.getToolbarTitle(
+                        defaultTitle = defaultTitle,
+                        defaultCategoryTitle = stringResource(MR.strings.label_default),
+                        page = screenModel.activeCategoryIndex,
+                    )
                 val tabVisible = state.showCategoryTabs && state.categories.size > 1
                 LibraryToolbar(
                     hasActiveFilters = state.hasActiveFilters,
@@ -176,8 +179,9 @@ data object MangaLibraryTab : Tab {
                     onChangeCategoryClicked = screenModel::openChangeCategoryDialog,
                     onMarkAsViewedClicked = { screenModel.markReadSelection(true) },
                     onMarkAsUnviewedClicked = { screenModel.markReadSelection(false) },
-                    onDownloadClicked = screenModel::runDownloadActionSelection
-                        .takeIf { state.selection.fastAll { !it.manga.isLocal() } },
+                    onDownloadClicked =
+                        screenModel::runDownloadActionSelection
+                            .takeIf { state.selection.fastAll { !it.manga.isLocal() } },
                     onDeleteClicked = screenModel::openDeleteMangaDialog,
                     isManga = true,
                 )
@@ -191,13 +195,14 @@ data object MangaLibraryTab : Tab {
                     EmptyScreen(
                         stringRes = MR.strings.information_empty_library,
                         modifier = Modifier.padding(contentPadding),
-                        actions = persistentListOf(
-                            EmptyScreenAction(
-                                stringRes = MR.strings.getting_started_guide,
-                                icon = Icons.AutoMirrored.Outlined.HelpOutline,
-                                onClick = { handler.openUri(GETTING_STARTED_URL) },
+                        actions =
+                            persistentListOf(
+                                EmptyScreenAction(
+                                    stringRes = MR.strings.getting_started_guide,
+                                    icon = Icons.AutoMirrored.Outlined.HelpOutline,
+                                    onClick = { handler.openUri(GETTING_STARTED_URL) },
+                                ),
                             ),
-                        ),
                     )
                 }
                 else -> {
@@ -211,25 +216,26 @@ data object MangaLibraryTab : Tab {
                         showPageTabs = state.showCategoryTabs || !state.searchQuery.isNullOrEmpty(),
                         onChangeCurrentPage = { screenModel.activeCategoryIndex = it },
                         onMangaClicked = { navigator.push(MangaScreen(it)) },
-                        onContinueReadingClicked = { it: LibraryManga ->
-                            scope.launchIO {
-                                val chapter = screenModel.getNextUnreadChapter(it.manga)
-                                if (chapter != null) {
-                                    context.startActivity(
-                                        ReaderActivity.newIntent(
-                                            context,
-                                            chapter.mangaId,
-                                            chapter.id,
-                                        ),
-                                    )
-                                } else {
-                                    snackbarHostState.showSnackbar(
-                                        context.stringResource(MR.strings.no_next_chapter),
-                                    )
+                        onContinueReadingClicked =
+                            { it: LibraryManga ->
+                                scope.launchIO {
+                                    val chapter = screenModel.getNextUnreadChapter(it.manga)
+                                    if (chapter != null) {
+                                        context.startActivity(
+                                            ReaderActivity.newIntent(
+                                                context,
+                                                chapter.mangaId,
+                                                chapter.id,
+                                            ),
+                                        )
+                                    } else {
+                                        snackbarHostState.showSnackbar(
+                                            context.stringResource(MR.strings.no_next_chapter),
+                                        )
+                                    }
                                 }
-                            }
-                            Unit
-                        }.takeIf { state.showMangaContinueButton },
+                                Unit
+                            }.takeIf { state.showMangaContinueButton },
                         onToggleSelection = screenModel::toggleSelection,
                         onToggleRangeSelection = {
                             screenModel.toggleRangeSelection(it)
@@ -255,18 +261,19 @@ data object MangaLibraryTab : Tab {
 
         val onDismissRequest = screenModel::closeDialog
         when (val dialog = state.dialog) {
-            is MangaLibraryScreenModel.Dialog.SettingsSheet -> run {
-                val category = state.categories.getOrNull(screenModel.activeCategoryIndex)
-                if (category == null) {
-                    onDismissRequest()
-                    return@run
+            is MangaLibraryScreenModel.Dialog.SettingsSheet ->
+                run {
+                    val category = state.categories.getOrNull(screenModel.activeCategoryIndex)
+                    if (category == null) {
+                        onDismissRequest()
+                        return@run
+                    }
+                    MangaLibrarySettingsDialog(
+                        onDismissRequest = onDismissRequest,
+                        screenModel = settingsScreenModel,
+                        category = category,
+                    )
                 }
-                MangaLibrarySettingsDialog(
-                    onDismissRequest = onDismissRequest,
-                    screenModel = settingsScreenModel,
-                    category = category,
-                )
-            }
             is MangaLibraryScreenModel.Dialog.ChangeCategory -> {
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,
@@ -321,9 +328,11 @@ data object MangaLibraryTab : Tab {
 
     // For invoking search from other screen
     private val queryEvent = Channel<String>()
+
     suspend fun search(query: String) = queryEvent.send(query)
 
     // For opening settings sheet in LibraryController
     private val requestSettingsSheetEvent = Channel<Unit>()
+
     private suspend fun requestOpenSettingsSheet() = requestSettingsSheetEvent.send(Unit)
 }

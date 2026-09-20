@@ -124,6 +124,10 @@ data class Anime(
         return episodeFlags and EPISODE_SUMMARIES_MASK == EPISODE_SHOW_SUMMARIES
     }
 
+    fun showMissingCount(): Boolean {
+        return episodeFlags and EPISODE_MISSING_COUNT_MASK == EPISODE_SHOW_MISSING_COUNT
+    }
+
     val seasonDownloadedFilterRaw: Long
         get() = seasonFlags and SEASON_DOWNLOADED_MASK
 
@@ -252,6 +256,10 @@ data class Anime(
         const val EPISODE_SHOW_SUMMARIES = 0x00000000L
         const val EPISODE_SHOW_NOT_SUMMARIES = 0x00001000L
         const val EPISODE_SUMMARIES_MASK = 0x00001000L
+
+        const val EPISODE_SHOW_MISSING_COUNT = 0x00000000L
+        const val EPISODE_SHOW_NOT_MISSING_COUNT = 0x00002000L
+        const val EPISODE_MISSING_COUNT_MASK = 0x00002000L
 
         const val EPISODE_DISPLAY_NAME = 0x00000000L
         const val EPISODE_DISPLAY_NUMBER = 0x00100000L

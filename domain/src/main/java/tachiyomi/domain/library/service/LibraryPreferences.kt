@@ -232,6 +232,11 @@ class LibraryPreferences(
         Anime.EPISODE_SHOW_SUMMARIES,
     )
 
+    fun showEpisodeMissingCount() = preferenceStore.getLong(
+        "default_episode_show_missing_count",
+        Anime.EPISODE_SHOW_MISSING_COUNT,
+    )
+
     fun setEpisodeSettingsDefault(anime: Anime) {
         filterEpisodeBySeen().set(anime.unseenFilterRaw)
         filterEpisodeByDownloaded().set(anime.downloadedFilterRaw)
@@ -244,6 +249,7 @@ class LibraryPreferences(
         )
         showEpisodeThumbnailPreviews().set(anime.showPreviewsRaw)
         showEpisodeSummaries().set(anime.showSummariesRaw)
+        showEpisodeMissingCount().set(anime.episodeFlags and Anime.EPISODE_MISSING_COUNT_MASK)
     }
 
     fun setChapterSettingsDefault(manga: Manga) {

@@ -423,6 +423,16 @@
     <string name="pref_bottom_nav_no_updates">Move Updates to the More tab</string>
     <string name="pref_bottom_nav_no_manga">Move Manga to the More tab</string>
     <string name="pref_bottom_nav_no_browse">Move Browse to the More tab</string>
+    <string name="pref_bottom_nav_show_anime">Show Anime tab</string>
+    <string name="pref_bottom_nav_show_manga">Show Manga tab</string>
+    <string name="pref_bottom_nav_show_updates">Show Updates tab</string>
+    <string name="pref_bottom_nav_show_history">Show History tab</string>
+    <string name="pref_bottom_nav_show_browse">Show Browse tab</string>
+    <string name="pref_bottom_nav_show_summary">Hide to move it to the More tab</string>
+    <string name="pref_bottom_nav_order">Reorder tabs</string>
+    <string name="pref_bottom_nav_tab_order_header">Tab order</string>
+    <string name="pref_bottom_nav_order_summary">Drag to reorder the bottom navigation tabs</string>
+    <string name="pref_bottom_nav_hidden">Hidden</string>
     <string name="action_filter_unseen">Unseen</string>
     <string name="action_global_manga_search">Global Manga Search</string>
     <string name="action_global_anime_search">Global Anime Search</string>
@@ -612,5 +622,6 @@
     <string name="pref_download_fillermarked_items">Allow downloading of fillermarked episodes</string>
     <string name="show_episode_previews">Episode thumbnails</string>
     <string name="show_episode_summaries">Episode summaries</string>
+    <string name="show_episode_missing_count">Missing item count</string>
     <string name="show_episode_grid">Thumbnail grid</string>
 </resources>

@@ -35,7 +35,6 @@ class SyncEpisodesWithSource(
     private val getEpisodesByAnimeId: GetEpisodesByAnimeId,
     private val libraryPreferences: LibraryPreferences,
 ) {
-
     /**
      * Method to synchronize db episodes with source ones
      *
@@ -58,24 +57,27 @@ class SyncEpisodesWithSource(
         val now = ZonedDateTime.now()
         val nowMillis = now.toInstant().toEpochMilli()
 
-        val sourceEpisodes = rawSourceEpisodes
-            .distinctBy { it.url }
-            .mapIndexed { i, sEpisode ->
-                Episode.create()
-                    .copyFromSEpisode(sEpisode)
-                    .copy(name = with(EpisodeSanitizer) { sEpisode.name.sanitize(anime.title) })
-                    .copy(animeId = anime.id, sourceOrder = i.toLong())
-            }
+        val sourceEpisodes =
+            rawSourceEpisodes
+                .distinctBy { it.url }
+                .mapIndexed { i, sEpisode ->
+                    Episode
+                        .create()
+                        .copyFromSEpisode(sEpisode)
+                        .copy(name = with(EpisodeSanitizer) { sEpisode.name.sanitize(anime.title) })
+                        .copy(animeId = anime.id, sourceOrder = i.toLong())
+                }
 
         val dbEpisodes = getEpisodesByAnimeId.await(anime.id)
 
         val newEpisodes = mutableListOf<Episode>()
         val updatedEpisodes = mutableListOf<Episode>()
-        val removedEpisodes = dbEpisodes.filterNot { dbEpisode ->
-            sourceEpisodes.any { sourceEpisode ->
-                dbEpisode.url == sourceEpisode.url
+        val removedEpisodes =
+            dbEpisodes.filterNot { dbEpisode ->
+                sourceEpisodes.any { sourceEpisode ->
+                    dbEpisode.url == sourceEpisode.url
+                }
             }
-        }
 
         // Used to not set upload date of older episodes
         // to a higher value than newer episodes
@@ -92,62 +94,69 @@ class SyncEpisodesWithSource(
             }
 
             // Recognize episode number for the episode.
-            val episodeNumber = EpisodeRecognition.parseEpisodeNumber(
-                anime.title,
-                episode.name,
-                episode.episodeNumber,
-            )
+            val episodeNumber =
+                EpisodeRecognition.parseEpisodeNumber(
+                    anime.title,
+                    episode.name,
+                    episode.episodeNumber,
+                )
             episode = episode.copy(episodeNumber = episodeNumber)
 
             val dbEpisode = dbEpisodes.find { it.url == episode.url }
 
             if (dbEpisode == null) {
-                val toAddEpisode = if (episode.dateUpload == 0L) {
-                    val altDateUpload = if (maxSeenUploadDate == 0L) nowMillis else maxSeenUploadDate
-                    episode.copy(dateUpload = altDateUpload)
-                } else {
-                    maxSeenUploadDate = max(maxSeenUploadDate, sourceEpisode.dateUpload)
-                    episode
-                }
+                val toAddEpisode =
+                    if (episode.dateUpload == 0L) {
+                        val altDateUpload = if (maxSeenUploadDate == 0L) nowMillis else maxSeenUploadDate
+                        episode.copy(dateUpload = altDateUpload)
+                    } else {
+                        maxSeenUploadDate = max(maxSeenUploadDate, sourceEpisode.dateUpload)
+                        episode
+                    }
                 newEpisodes.add(toAddEpisode)
             } else {
                 if (shouldUpdateDbEpisode.await(dbEpisode, episode)) {
-                    val shouldRenameEpisode = downloadProvider.isEpisodeDirNameChanged(
-                        dbEpisode,
-                        episode,
-                    ) &&
-                        downloadManager.isEpisodeDownloaded(
-                            dbEpisode.name,
-                            dbEpisode.scanlator,
-                            anime.title,
-                            anime.source,
-                        )
+                    val shouldRenameEpisode =
+                        downloadProvider.isEpisodeDirNameChanged(
+                            dbEpisode,
+                            episode,
+                        ) &&
+                            downloadManager.isEpisodeDownloaded(
+                                dbEpisode.name,
+                                dbEpisode.scanlator,
+                                anime.title,
+                                anime.source,
+                            )
 
                     if (shouldRenameEpisode) {
                         downloadManager.renameEpisode(source, anime, dbEpisode, episode)
                     }
-                    var toChangeEpisode = dbEpisode.copy(
-                        name = episode.name,
-                        episodeNumber = episode.episodeNumber,
-                        scanlator = episode.scanlator,
-                        summary = episode.summary,
-                        sourceOrder = episode.sourceOrder,
-                        memo = episode.memo,
-                    )
-                    if (episode.dateUpload != 0L) {
-                        toChangeEpisode = toChangeEpisode.copy(
-                            dateUpload = sourceEpisode.dateUpload,
+                    var toChangeEpisode =
+                        dbEpisode.copy(
+                            name = episode.name,
+                            episodeNumber = episode.episodeNumber,
+                            scanlator = episode.scanlator,
+                            summary = episode.summary,
+                            sourceOrder = episode.sourceOrder,
+                            memo = episode.memo,
                         )
+                    if (episode.dateUpload != 0L) {
+                        toChangeEpisode =
+                            toChangeEpisode.copy(
+                                dateUpload = sourceEpisode.dateUpload,
+                            )
                     }
                     if (!toChangeEpisode.fillermark) {
-                        toChangeEpisode = toChangeEpisode.copy(
-                            fillermark = sourceEpisode.fillermark,
-                        )
+                        toChangeEpisode =
+                            toChangeEpisode.copy(
+                                fillermark = sourceEpisode.fillermark,
+                            )
                     }
-                    if (toChangeEpisode.previewUrl.isNullOrBlank()) {
-                        toChangeEpisode = toChangeEpisode.copy(
-                            previewUrl = sourceEpisode.previewUrl,
-                        )
+                    if (source.isLocal() || toChangeEpisode.previewUrl.isNullOrBlank()) {
+                        toChangeEpisode =
+                            toChangeEpisode.copy(
+                                previewUrl = sourceEpisode.previewUrl,
+                            )
                     }
                     updatedEpisodes.add(toChangeEpisode)
                 }
@@ -172,11 +181,12 @@ class SyncEpisodesWithSource(
         val deletedSeenEpisodeNumbers = TreeSet<Double>()
         val deletedBookmarkedEpisodeNumbers = TreeSet<Double>()
 
-        val readEpisodeNumbers = dbEpisodes
-            .asSequence()
-            .filter { it.seen && it.isRecognizedNumber }
-            .map { it.episodeNumber }
-            .toSet()
+        val readEpisodeNumbers =
+            dbEpisodes
+                .asSequence()
+                .filter { it.seen && it.isRecognizedNumber }
+                .map { it.episodeNumber }
+                .toSet()
 
         removedEpisodes.forEach { episode ->
             if (episode.seen) deletedSeenEpisodeNumbers.add(episode.episodeNumber)
@@ -184,39 +194,46 @@ class SyncEpisodesWithSource(
             deletedEpisodeNumbers.add(episode.episodeNumber)
         }
 
-        val deletedEpisodeNumberDateFetchMap = removedEpisodes.sortedByDescending { it.dateFetch }
-            .associate { it.episodeNumber to it.dateFetch }
+        val deletedEpisodeNumberDateFetchMap =
+            removedEpisodes
+                .sortedByDescending { it.dateFetch }
+                .associate { it.episodeNumber to it.dateFetch }
 
-        val markDuplicateAsRead = libraryPreferences.markDuplicateSeenEpisodeAsSeen().get()
-            .contains(LibraryPreferences.MARK_DUPLICATE_EPISODE_SEEN_NEW)
+        val markDuplicateAsRead =
+            libraryPreferences
+                .markDuplicateSeenEpisodeAsSeen()
+                .get()
+                .contains(LibraryPreferences.MARK_DUPLICATE_EPISODE_SEEN_NEW)
 
         // Date fetch is set in such a way that the upper ones will have bigger value than the lower ones
         // Sources MUST return the episodes from most to less recent, which is common.
         var itemCount = newEpisodes.size
-        var updatedToAdd = newEpisodes.map { toAddItem ->
-            var episode = toAddItem.copy(dateFetch = nowMillis + itemCount--)
+        var updatedToAdd =
+            newEpisodes.map { toAddItem ->
+                var episode = toAddItem.copy(dateFetch = nowMillis + itemCount--)
 
-            if (episode.episodeNumber in readEpisodeNumbers && markDuplicateAsRead) {
+                if (episode.episodeNumber in readEpisodeNumbers && markDuplicateAsRead) {
+                    changedOrDuplicateReadUrls.add(episode.url)
+                    episode = episode.copy(seen = true)
+                }
+
+                if (!episode.isRecognizedNumber || episode.episodeNumber !in deletedEpisodeNumbers) return@map episode
+
+                episode =
+                    episode.copy(
+                        seen = episode.episodeNumber in deletedSeenEpisodeNumbers,
+                        bookmark = episode.episodeNumber in deletedBookmarkedEpisodeNumbers,
+                    )
+
+                // Try to to use the fetch date of the original entry to not pollute 'Updates' tab
+                deletedEpisodeNumberDateFetchMap[episode.episodeNumber]?.let {
+                    episode = episode.copy(dateFetch = it)
+                }
+
                 changedOrDuplicateReadUrls.add(episode.url)
-                episode = episode.copy(seen = true)
+
+                episode
             }
-
-            if (!episode.isRecognizedNumber || episode.episodeNumber !in deletedEpisodeNumbers) return@map episode
-
-            episode = episode.copy(
-                seen = episode.episodeNumber in deletedSeenEpisodeNumbers,
-                bookmark = episode.episodeNumber in deletedBookmarkedEpisodeNumbers,
-            )
-
-            // Try to to use the fetch date of the original entry to not pollute 'Updates' tab
-            deletedEpisodeNumberDateFetchMap[episode.episodeNumber]?.let {
-                episode = episode.copy(dateFetch = it)
-            }
-
-            changedOrDuplicateReadUrls.add(episode.url)
-
-            episode
-        }
 
         if (removedEpisodes.isNotEmpty()) {
             val toDeleteIds = removedEpisodes.map { it.id }
