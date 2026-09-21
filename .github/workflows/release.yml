@@ -1,0 +1,36 @@
+name: Release APK
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build debug APKs
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+      - run: ./gradlew assembleDebug
+
+      - name: Delete release if it exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release delete latest --yes || true
+
+      - name: Create release and upload APKs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create latest \
+            --title "Latest build (${{ github.sha }})" \
+            --notes "Auto-built from ${{ github.sha }}" \
+            app/build/outputs/apk/debug/*.apk
