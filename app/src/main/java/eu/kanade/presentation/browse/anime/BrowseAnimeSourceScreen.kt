@@ -39,7 +39,8 @@ import tachiyomi.source.local.entries.anime.LocalAnimeSource
 @Composable
 fun BrowseAnimeSourceContent(
     source: AnimeSource?,
-    animeList: LazyPagingItems<StateFlow<Anime>>,
+    animeList: LazyPagingItems<Anime>,
+    favoriteUrls: StateFlow<Set<String>>,
     columns: GridCells,
     entries: Int = 0,
     topBarHeight: Int = 0,
@@ -122,6 +123,7 @@ fun BrowseAnimeSourceContent(
         LibraryDisplayMode.ComfortableGrid -> {
             BrowseAnimeSourceComfortableGrid(
                 animeList = animeList,
+                favoriteUrls = favoriteUrls,
                 columns = columns,
                 contentPadding = contentPadding,
                 onAnimeClick = onAnimeClick,
@@ -131,6 +133,7 @@ fun BrowseAnimeSourceContent(
         LibraryDisplayMode.List -> {
             BrowseAnimeSourceList(
                 animeList = animeList,
+                favoriteUrls = favoriteUrls,
                 entries = entries,
                 topBarHeight = topBarHeight,
                 contentPadding = contentPadding,
@@ -141,6 +144,7 @@ fun BrowseAnimeSourceContent(
         LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {
             BrowseAnimeSourceCompactGrid(
                 animeList = animeList,
+                favoriteUrls = favoriteUrls,
                 columns = columns,
                 contentPadding = contentPadding,
                 onAnimeClick = onAnimeClick,

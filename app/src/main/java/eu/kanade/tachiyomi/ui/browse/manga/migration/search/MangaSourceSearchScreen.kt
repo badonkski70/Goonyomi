@@ -87,6 +87,7 @@ data class MangaSourceSearchScreen(
             BrowseSourceContent(
                 source = screenModel.source,
                 mangaList = screenModel.mangaPagerFlowFlow.collectAsLazyPagingItems(),
+                favoriteUrls = screenModel.favoriteUrls,
                 columns = screenModel.getColumnsPreference(LocalConfiguration.current.orientation),
                 displayMode = screenModel.displayMode,
                 snackbarHostState = snackbarHostState,

@@ -22,12 +22,14 @@ import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun BrowseAnimeSourceCompactGrid(
-    animeList: LazyPagingItems<StateFlow<Anime>>,
+    animeList: LazyPagingItems<Anime>,
+    favoriteUrls: StateFlow<Set<String>>,
     columns: GridCells,
     contentPadding: PaddingValues,
     onAnimeClick: (Anime) -> Unit,
     onAnimeLongClick: (Anime) -> Unit,
 ) {
+    val favorites by favoriteUrls.collectAsState()
     LazyVerticalGrid(
         columns = columns,
         contentPadding = contentPadding + PaddingValues(8.dp),
@@ -41,9 +43,10 @@ fun BrowseAnimeSourceCompactGrid(
         }
 
         items(count = animeList.itemCount) { index ->
-            val anime by animeList[index]?.collectAsState() ?: return@items
+            val anime = animeList[index] ?: return@items
             BrowseAnimeSourceCompactGridItem(
                 anime = anime,
+                isFavorite = anime.url in favorites,
                 onClick = { onAnimeClick(anime) },
                 onLongClick = { onAnimeLongClick(anime) },
             )
@@ -60,6 +63,7 @@ fun BrowseAnimeSourceCompactGrid(
 @Composable
 private fun BrowseAnimeSourceCompactGridItem(
     anime: Anime,
+    isFavorite: Boolean,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = onClick,
 ) {
@@ -68,13 +72,13 @@ private fun BrowseAnimeSourceCompactGridItem(
         coverData = AnimeCover(
             animeId = anime.id,
             sourceId = anime.source,
-            isAnimeFavorite = anime.favorite,
+            isAnimeFavorite = isFavorite,
             url = anime.thumbnailUrl,
             lastModified = anime.coverLastModified,
         ),
-        coverAlpha = if (anime.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+        coverAlpha = if (isFavorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
         coverBadgeStart = {
-            InLibraryBadge(enabled = anime.favorite)
+            InLibraryBadge(enabled = isFavorite)
         },
         onLongClick = onLongClick,
         onClick = onClick,

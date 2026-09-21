@@ -219,6 +219,7 @@ data class BrowseAnimeSourceScreen(
             BrowseAnimeSourceContent(
                 source = screenModel.source,
                 animeList = screenModel.animePagerFlowFlow.collectAsLazyPagingItems(),
+                favoriteUrls = screenModel.favoriteUrls,
                 columns = screenModel.getColumnsPreference(LocalConfiguration.current.orientation),
                 entries = screenModel.getColumnsPreferenceForCurrentOrientation(LocalConfiguration.current.orientation),
                 topBarHeight = topBarHeight,

@@ -22,7 +22,8 @@ import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun BrowseAnimeSourceList(
-    animeList: LazyPagingItems<StateFlow<Anime>>,
+    animeList: LazyPagingItems<Anime>,
+    favoriteUrls: StateFlow<Set<String>>,
     entries: Int,
     topBarHeight: Int,
     contentPadding: PaddingValues,
@@ -30,6 +31,7 @@ fun BrowseAnimeSourceList(
     onAnimeLongClick: (Anime) -> Unit,
 ) {
     val sourceListState = rememberLazyListState()
+    val favorites by favoriteUrls.collectAsState()
     BoxWithConstraints {
         val density = LocalDensity.current
         val containerHeightPx = with(density) { this@BoxWithConstraints.maxHeight.roundToPx() }
@@ -45,9 +47,10 @@ fun BrowseAnimeSourceList(
             }
 
             items(count = animeList.itemCount) { index ->
-                val anime by animeList[index]?.collectAsState() ?: return@items
+                val anime = animeList[index] ?: return@items
                 BrowseAnimeSourceListItem(
                     anime = anime,
+                    isFavorite = anime.url in favorites,
                     onClick = { onAnimeClick(anime) },
                     onLongClick = { onAnimeLongClick(anime) },
                     entries = entries,
@@ -69,6 +72,7 @@ fun BrowseAnimeSourceList(
 @Composable
 private fun BrowseAnimeSourceListItem(
     anime: Anime,
+    isFavorite: Boolean,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = onClick,
     entries: Int,
@@ -79,13 +83,13 @@ private fun BrowseAnimeSourceListItem(
         coverData = AnimeCover(
             animeId = anime.id,
             sourceId = anime.source,
-            isAnimeFavorite = anime.favorite,
+            isAnimeFavorite = isFavorite,
             url = anime.thumbnailUrl,
             lastModified = anime.coverLastModified,
         ),
-        coverAlpha = if (anime.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+        coverAlpha = if (isFavorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
         badge = {
-            InLibraryBadge(enabled = anime.favorite)
+            InLibraryBadge(enabled = isFavorite)
         },
         onLongClick = onLongClick,
         onClick = onClick,

@@ -60,6 +60,7 @@ data class MigrateSeasonSelectScreen(
             BrowseAnimeSourceContent(
                 source = screenModel.source,
                 animeList = screenModel.seasonPagerFlowFlow.collectAsLazyPagingItems(),
+                favoriteUrls = screenModel.favoriteUrls,
                 columns = screenModel.getColumnsPreference(LocalConfiguration.current.orientation),
                 displayMode = screenModel.displayMode,
                 snackbarHostState = snackbarHostState,

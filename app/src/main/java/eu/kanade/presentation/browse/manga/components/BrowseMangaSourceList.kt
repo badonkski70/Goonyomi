@@ -22,7 +22,8 @@ import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun BrowseMangaSourceList(
-    mangaList: LazyPagingItems<StateFlow<Manga>>,
+    mangaList: LazyPagingItems<Manga>,
+    favoriteUrls: StateFlow<Set<String>>,
     entries: Int,
     topBarHeight: Int,
     contentPadding: PaddingValues,
@@ -30,6 +31,7 @@ fun BrowseMangaSourceList(
     onMangaLongClick: (Manga) -> Unit,
 ) {
     val sourceListState = rememberLazyListState()
+    val favorites by favoriteUrls.collectAsState()
     BoxWithConstraints {
         val density = LocalDensity.current
         val containerHeightPx = with(density) { this@BoxWithConstraints.maxHeight.roundToPx() }
@@ -45,9 +47,10 @@ fun BrowseMangaSourceList(
             }
 
             items(count = mangaList.itemCount) { index ->
-                val manga by mangaList[index]?.collectAsState() ?: return@items
+                val manga = mangaList[index] ?: return@items
                 BrowseMangaSourceListItem(
                     manga = manga,
+                    isFavorite = manga.url in favorites,
                     onClick = { onMangaClick(manga) },
                     onLongClick = { onMangaLongClick(manga) },
                     entries = entries,
@@ -69,6 +72,7 @@ fun BrowseMangaSourceList(
 @Composable
 private fun BrowseMangaSourceListItem(
     manga: Manga,
+    isFavorite: Boolean,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = onClick,
     entries: Int,
@@ -79,13 +83,13 @@ private fun BrowseMangaSourceListItem(
         coverData = MangaCover(
             mangaId = manga.id,
             sourceId = manga.source,
-            isMangaFavorite = manga.favorite,
+            isMangaFavorite = isFavorite,
             url = manga.thumbnailUrl,
             lastModified = manga.coverLastModified,
         ),
-        coverAlpha = if (manga.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+        coverAlpha = if (isFavorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
         badge = {
-            InLibraryBadge(enabled = manga.favorite)
+            InLibraryBadge(enabled = isFavorite)
         },
         onLongClick = onLongClick,
         onClick = onClick,

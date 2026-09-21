@@ -88,6 +88,7 @@ data class AnimeSourceSearchScreen(
             BrowseAnimeSourceContent(
                 source = screenModel.source,
                 animeList = screenModel.animePagerFlowFlow.collectAsLazyPagingItems(),
+                favoriteUrls = screenModel.favoriteUrls,
                 columns = screenModel.getColumnsPreference(LocalConfiguration.current.orientation),
                 displayMode = screenModel.displayMode,
                 snackbarHostState = snackbarHostState,

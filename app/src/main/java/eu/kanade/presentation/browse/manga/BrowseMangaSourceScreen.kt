@@ -39,7 +39,8 @@ import tachiyomi.source.local.entries.manga.LocalMangaSource
 @Composable
 fun BrowseSourceContent(
     source: MangaSource?,
-    mangaList: LazyPagingItems<StateFlow<Manga>>,
+    mangaList: LazyPagingItems<Manga>,
+    favoriteUrls: StateFlow<Set<String>>,
     columns: GridCells,
     entries: Int = 0,
     topBarHeight: Int = 0,
@@ -122,6 +123,7 @@ fun BrowseSourceContent(
         LibraryDisplayMode.ComfortableGrid -> {
             BrowseMangaSourceComfortableGrid(
                 mangaList = mangaList,
+                favoriteUrls = favoriteUrls,
                 columns = columns,
                 contentPadding = contentPadding,
                 onMangaClick = onMangaClick,
@@ -131,6 +133,7 @@ fun BrowseSourceContent(
         LibraryDisplayMode.List -> {
             BrowseMangaSourceList(
                 mangaList = mangaList,
+                favoriteUrls = favoriteUrls,
                 entries = entries,
                 topBarHeight = topBarHeight,
                 contentPadding = contentPadding,
@@ -141,6 +144,7 @@ fun BrowseSourceContent(
         LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {
             BrowseMangaSourceCompactGrid(
                 mangaList = mangaList,
+                favoriteUrls = favoriteUrls,
                 columns = columns,
                 contentPadding = contentPadding,
                 onMangaClick = onMangaClick,

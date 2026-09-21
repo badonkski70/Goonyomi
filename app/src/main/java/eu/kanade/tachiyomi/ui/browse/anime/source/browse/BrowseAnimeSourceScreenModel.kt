@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
@@ -28,9 +29,10 @@ import eu.kanade.tachiyomi.util.removeCovers
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -42,7 +44,7 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.anime.interactor.SetAnimeCategories
 import tachiyomi.domain.category.model.Category
-import tachiyomi.domain.entries.anime.interactor.GetAnime
+import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
 import tachiyomi.domain.entries.anime.interactor.GetDuplicateLibraryAnime
 import tachiyomi.domain.entries.anime.interactor.NetworkToLocalAnime
 import tachiyomi.domain.entries.anime.model.Anime
@@ -69,7 +71,7 @@ class BrowseAnimeSourceScreenModel(
     private val getCategories: GetAnimeCategories = Injekt.get(),
     private val setAnimeCategories: SetAnimeCategories = Injekt.get(),
     private val setAnimeDefaultEpisodeFlags: SetAnimeDefaultEpisodeFlags = Injekt.get(),
-    private val getAnime: GetAnime = Injekt.get(),
+    private val getAnimeFavoritesBySourceId: GetAnimeFavorites = Injekt.get(),
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
     private val updateAnime: UpdateAnime = Injekt.get(),
     private val addTracks: AddAnimeTracks = Injekt.get(),
@@ -106,7 +108,10 @@ class BrowseAnimeSourceScreenModel(
      * Flow of Pager flow tied to [State.listing]
      */
     private val hideInLibraryItems = sourcePreferences.hideInAnimeLibraryItems().get()
-    val animePagerFlowFlow = state.map { it.listing }
+    val favoriteUrls: StateFlow<Set<String>> = getAnimeFavoritesBySourceId.subscribe(sourceId)
+        .map { favorites -> favorites.mapTo(hashSetOf()) { it.url } }
+        .stateIn(ioCoroutineScope, SharingStarted.Lazily, emptySet())
+    val animePagerFlowFlow: StateFlow<Flow<PagingData<Anime>>> = state.map { it.listing }
         .distinctUntilChanged()
         .map { listing ->
             Pager(PagingConfig(pageSize = 25)) {
@@ -114,11 +119,8 @@ class BrowseAnimeSourceScreenModel(
             }.flow.map { pagingData ->
                 pagingData.map {
                     networkToLocalAnime.await(it.toDomainAnime(sourceId))
-                        .let { localAnime -> getAnime.subscribe(localAnime.url, localAnime.source) }
-                        .filterNotNull()
-                        .stateIn(ioCoroutineScope)
                 }
-                    .filter { !hideInLibraryItems || !it.value.favorite }
+                    .filter { !hideInLibraryItems || it.url !in favoriteUrls.value }
             }
                 .cachedIn(ioCoroutineScope)
         }

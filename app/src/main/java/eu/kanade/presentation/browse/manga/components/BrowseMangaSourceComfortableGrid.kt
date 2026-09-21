@@ -22,12 +22,14 @@ import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun BrowseMangaSourceComfortableGrid(
-    mangaList: LazyPagingItems<StateFlow<Manga>>,
+    mangaList: LazyPagingItems<Manga>,
+    favoriteUrls: StateFlow<Set<String>>,
     columns: GridCells,
     contentPadding: PaddingValues,
     onMangaClick: (Manga) -> Unit,
     onMangaLongClick: (Manga) -> Unit,
 ) {
+    val favorites by favoriteUrls.collectAsState()
     LazyVerticalGrid(
         columns = columns,
         contentPadding = contentPadding + PaddingValues(8.dp),
@@ -41,9 +43,10 @@ fun BrowseMangaSourceComfortableGrid(
         }
 
         items(count = mangaList.itemCount) { index ->
-            val manga by mangaList[index]?.collectAsState() ?: return@items
+            val manga = mangaList[index] ?: return@items
             BrowseMangaSourceComfortableGridItem(
                 manga = manga,
+                isFavorite = manga.url in favorites,
                 onClick = { onMangaClick(manga) },
                 onLongClick = { onMangaLongClick(manga) },
             )
@@ -60,6 +63,7 @@ fun BrowseMangaSourceComfortableGrid(
 @Composable
 private fun BrowseMangaSourceComfortableGridItem(
     manga: Manga,
+    isFavorite: Boolean,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = onClick,
 ) {
@@ -68,13 +72,13 @@ private fun BrowseMangaSourceComfortableGridItem(
         coverData = MangaCover(
             mangaId = manga.id,
             sourceId = manga.source,
-            isMangaFavorite = manga.favorite,
+            isMangaFavorite = isFavorite,
             url = manga.thumbnailUrl,
             lastModified = manga.coverLastModified,
         ),
-        coverAlpha = if (manga.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+        coverAlpha = if (isFavorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
         coverBadgeStart = {
-            InLibraryBadge(enabled = manga.favorite)
+            InLibraryBadge(enabled = isFavorite)
         },
         onLongClick = onLongClick,
         onClick = onClick,
