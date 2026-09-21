@@ -22,7 +22,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: true
-      - run: ./gradlew assembleDebug
+      - run: ./gradlew assembleRelease
 
       - name: Delete release if it exists
         env:
@@ -36,4 +36,4 @@ jobs:
           gh release create latest \
             --title "Latest build (${{ github.sha }})" \
             --notes "Auto-built from ${{ github.sha }}" \
-            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
