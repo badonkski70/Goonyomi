@@ -191,6 +191,10 @@ object SettingsAppearanceScreen : SearchableSettings {
                                 formattedNow,
                             ),
                     ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = uiPreferences.disableAnimations(),
+                        title = stringResource(AYMR.strings.pref_disable_animations),
+                    ),
                 ),
         )
     }

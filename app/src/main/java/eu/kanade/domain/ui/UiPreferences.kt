@@ -32,6 +32,8 @@ class UiPreferences(
 
     fun relativeTime() = preferenceStore.getBoolean("relative_time_v2", true)
 
+    fun disableAnimations() = preferenceStore.getBoolean("pref_disable_animations", false)
+
     fun dateFormat() = preferenceStore.getString("app_date_format", "")
 
     fun tabletUiMode() = preferenceStore.getEnum("tablet_ui_mode", TabletUiMode.AUTOMATIC)
