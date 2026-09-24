@@ -32,6 +32,16 @@ Discover and watch anime, cartoons, series, and more – easier than ever on you
 * Create backups locally to read/watch offline or to your desired cloud service.
 * Plus much more...
 
+### Goonyomi extras
+
+* Customizable bottom navigation: show/hide tabs and drag to reorder.
+* Global disable-animations switch.
+* Per-anime missing-items flag, plus local thumbnail fixes.
+* Download cleanup: remove orphaned, read, or not-in-library chapters.
+* Filename options: include chapter URL hash, disallow non-ASCII names.
+* Password-protected (encrypted) downloads.
+* Modern extension repos with v2 index support.
+
 </div>
 
 ## Contributing
