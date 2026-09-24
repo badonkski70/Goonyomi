@@ -47,6 +47,9 @@ Goonyomi is a fork of [Aniyomi](https://github.com/aniyomiorg/aniyomi), which it
 <a href="https://github.com/badonkski70/Goonyomi/graphs/contributors">
     <img src="https://contrib.rocks/image?repo=badonkski70/Goonyomi" alt="Goonyomi app contributors" title="Goonyomi app contributors" width="800"/>
 </a>
+<a href="https://github.com/aniyomiorg/aniyomi/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=aniyomiorg/aniyomi" alt="Aniyomi contributors" title="Aniyomi contributors" width="800"/>
+</a>
 
 ### Disclaimer
 
