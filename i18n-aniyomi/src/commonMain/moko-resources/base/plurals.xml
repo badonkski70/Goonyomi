@@ -60,4 +60,8 @@
         <item quantity="one">%d video</item>
         <item quantity="other">%d videos</item>
     </plurals>
+    <plurals name="cleanup_done">
+        <item quantity="one">Cleanup done. Removed %d folder</item>
+        <item quantity="other">Cleanup done. Removed %d folders</item>
+    </plurals>
 </resources>

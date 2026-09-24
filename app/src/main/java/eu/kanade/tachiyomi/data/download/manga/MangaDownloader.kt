@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.manga.model.MangaDownload
 import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
+import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
@@ -41,6 +42,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
+import mihon.core.archive.CbzCrypto
 import mihon.core.archive.ZipWriter
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.Response
@@ -291,7 +293,7 @@ class MangaDownloader(
         val wasEmpty = queueState.value.isEmpty()
         val chaptersToQueue = chapters.asSequence()
             // Filter out those already downloaded.
-            .filter { provider.findChapterDir(it.name, it.scanlator, manga.title, source) == null }
+            .filter { provider.findChapterDir(it.name, it.scanlator, it.url, manga.title, source) == null }
             // Add chapters to queue from the start.
             .sortedByDescending { it.sourceOrder }
             // Filter out those already enqueued.
@@ -332,7 +334,14 @@ class MangaDownloader(
      * @param download the chapter to be downloaded.
      */
     private suspend fun downloadChapter(download: MangaDownload) {
-        val mangaDir = provider.getMangaDir(download.manga.title, download.source)
+        val mangaDir = provider.getMangaDir(download.manga.title, download.source).getOrElse { error ->
+            if (error is CancellationException) throw error
+            // Fail this chapter only, keep the rest of the queue going
+            logcat(LogPriority.ERROR, error)
+            download.status = MangaDownload.State.ERROR
+            notifier.onError(error.message, download.chapter.name, download.manga.title, download.manga.id)
+            return
+        }
 
         val availSpace = DiskUtil.getAvailableStorageSpace(mangaDir)
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
@@ -346,7 +355,11 @@ class MangaDownloader(
             return
         }
 
-        val chapterDirname = provider.getChapterDirName(download.chapter.name, download.chapter.scanlator)
+        val chapterDirname = provider.getChapterDirName(
+            download.chapter.name,
+            download.chapter.scanlator,
+            download.chapter.url,
+        )
         val tmpDir = mangaDir.createDirectory(chapterDirname + TMP_DIR_SUFFIX)!!
 
         try {
@@ -385,9 +398,9 @@ class MangaDownloader(
             download.status = MangaDownload.State.DOWNLOADING
 
             // Start downloading images, consider we can have downloaded images already
-            // Concurrently do 2 pages at a time
+            // Concurrently download up to the configured number of pages at a time
             pageList.asFlow()
-                .flatMapMerge(concurrency = 2) { page ->
+                .flatMapMerge(concurrency = downloadPreferences.parallelPageLimit().get()) { page ->
                     flow {
                         // Fetch image URL if necessary
                         if (page.imageUrl.isNullOrEmpty()) {
@@ -461,17 +474,10 @@ class MangaDownloader(
 
         val digitCount = (download.pages?.size ?: 0).toString().length.coerceAtLeast(3)
         val filename = "%0${digitCount}d".format(Locale.ENGLISH, page.number)
-        val tmpFile = tmpDir.findFile("$filename.tmp")
-
-        // Delete temp file if it exists
-        tmpFile?.delete()
 
         // Try to find the image file
         val imageFile = tmpDir.listFiles()?.firstOrNull {
-            it.name!!.startsWith("$filename.") ||
-                it.name!!.startsWith(
-                    "${filename}__001",
-                )
+            isDownloadedPageImage(it.name ?: return@firstOrNull false, filename)
         }
 
         try {
@@ -518,21 +524,27 @@ class MangaDownloader(
         page.status = Page.State.DOWNLOAD_IMAGE
         page.progress = 0
         return flow {
+            // Keep a stable temp file so a failed attempt resumes/overwrites in place (SY #3504)
+            val file = tmpDir.findFile("$filename.tmp") ?: tmpDir.createFile("$filename.tmp")!!
+
             val response = source.getImage(page, dataSaver)
-            val file = tmpDir.createFile("$filename.tmp")!!
             try {
                 throttler.apply {
                     bytesPerSecond(downloadPreferences.downloadSpeedLimit().get().toLong() * 1024)
                 }
                 val throttledSource = throttler.source(response.body.source()).buffer()
-                throttledSource.saveTo(file.openOutputStream())
+                // Append on HTTP 206 (partial content), otherwise start from scratch (SY #3167)
+                throttledSource.saveTo(file.openOutputStream(response.code == 206))
                 throttledSource.close()
                 val extension = getImageExtension(response, file)
                 file.renameTo("$filename.$extension")
-            } catch (e: Exception) {
-                response.close()
-                file.delete()
+            } catch (e: HttpException) {
+                if (e.code == 416) {
+                    file.delete()
+                }
                 throw e
+            } finally {
+                response.close()
             }
             emit(file)
         }
@@ -540,6 +552,9 @@ class MangaDownloader(
             .retryWhen { _, attempt ->
                 if (attempt < 3) {
                     delay((2L shl attempt.toInt()) * 1000)
+                    if (source.isEhBasedSource()) {
+                        page.imageUrl = source.getImageUrl(page)
+                    }
                     true
                 } else {
                     false
@@ -557,6 +572,8 @@ class MangaDownloader(
      * @param filename the filename of the image.
      */
     private fun copyImageFromCache(cacheFile: File, tmpDir: UniFile, filename: String): UniFile {
+        // Delete temp file if it exists
+        tmpDir.findFile("$filename.tmp")?.delete()
         val tmpFile = tmpDir.createFile("$filename.tmp")!!
         cacheFile.inputStream().use { input ->
             tmpFile.openOutputStream().use { output ->
@@ -629,6 +646,18 @@ class MangaDownloader(
     }
 
     /**
+     * Checks if the file name matches a downloaded page image.
+     *
+     * @param fileName Name of the file to check
+     * @param pagePrefix Expected page prefix (e.g., "001")
+     */
+    private fun isDownloadedPageImage(fileName: String, pagePrefix: String): Boolean =
+        !fileName.endsWith(".tmp") && (
+            fileName.startsWith("$pagePrefix.") ||
+                fileName.startsWith("${pagePrefix}__001.")
+            )
+
+    /**
      * Archive the chapter pages as a CBZ.
      */
     private fun archiveChapter(
@@ -636,8 +665,10 @@ class MangaDownloader(
         dirname: String,
         tmpDir: UniFile,
     ) {
+        val encrypt = CbzCrypto.getPasswordProtectDlPref() && CbzCrypto.isPasswordSet()
+
         val zip = mangaDir.createFile("$dirname.cbz$TMP_DIR_SUFFIX")!!
-        ZipWriter(context, zip).use { writer ->
+        ZipWriter(context, zip, encrypt).use { writer ->
             tmpDir.listFiles()?.forEach { file ->
                 writer.write(file)
             }
@@ -772,3 +803,9 @@ class MangaDownloader(
 
 // Arbitrary minimum required space to start a download: 200 MB
 private const val MIN_DISK_SPACE = 200L * 1024 * 1024
+
+// EHentai / ExHentai source ids, whose image URLs can expire and must be re-fetched on retry
+private const val EH_SOURCE_ID = 6901L
+private const val EXH_SOURCE_ID = 6902L
+
+private fun HttpSource.isEhBasedSource(): Boolean = id == EH_SOURCE_ID || id == EXH_SOURCE_ID

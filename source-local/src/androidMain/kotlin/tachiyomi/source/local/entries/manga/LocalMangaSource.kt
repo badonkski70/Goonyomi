@@ -357,7 +357,7 @@ actual class LocalMangaSource(
                                 .find { it.isFile && ImageUtil.isImage(it.name) { reader.getInputStream(it.name)!! } }
                         }
 
-                        entry?.let { coverManager.update(manga, reader.getInputStream(it.name)!!) }
+                        entry?.let { coverManager.update(manga, reader.getInputStream(it.name)!!, reader.encrypted) }
                     }
                 }
                 is Format.Epub -> {

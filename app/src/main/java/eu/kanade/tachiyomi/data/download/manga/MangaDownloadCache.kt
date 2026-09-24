@@ -129,6 +129,7 @@ class MangaDownloadCache(
      *
      * @param chapterName the name of the chapter to query.
      * @param chapterScanlator scanlator of the chapter to query
+     * @param chapterUrl the url of the chapter to query
      * @param mangaTitle the title of the manga to query.
      * @param sourceId the id of the source of the chapter.
      * @param skipCache whether to skip the directory cache and check in the filesystem.
@@ -136,6 +137,7 @@ class MangaDownloadCache(
     fun isChapterDownloaded(
         chapterName: String,
         chapterScanlator: String?,
+        chapterUrl: String,
         mangaTitle: String,
         sourceId: Long,
         skipCache: Boolean,
@@ -145,6 +147,7 @@ class MangaDownloadCache(
             return provider.findChapterDir(
                 chapterName,
                 chapterScanlator,
+                chapterUrl,
                 mangaTitle,
                 source,
             ) != null
@@ -156,7 +159,7 @@ class MangaDownloadCache(
         if (sourceDir != null) {
             val mangaDir = sourceDir.mangaDirs[provider.getMangaDirName(mangaTitle)]
             if (mangaDir != null) {
-                return provider.getValidChapterDirNames(chapterName, chapterScanlator)
+                return provider.getValidChapterDirNames(chapterName, chapterScanlator, chapterUrl)
                     .any { it in mangaDir.chapterDirs }
             }
         }
@@ -263,7 +266,7 @@ class MangaDownloadCache(
         rootDownloadsDirMutex.withLock {
             val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return
             val mangaDir = sourceDir.mangaDirs[provider.getMangaDirName(manga.title)] ?: return
-            provider.getValidChapterDirNames(chapter.name, chapter.scanlator).forEach {
+            provider.getValidChapterDirNames(chapter.name, chapter.scanlator, chapter.url).forEach {
                 if (it in mangaDir.chapterDirs) {
                     mangaDir.chapterDirs -= it
                 }
@@ -284,7 +287,7 @@ class MangaDownloadCache(
             val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return
             val mangaDir = sourceDir.mangaDirs[provider.getMangaDirName(manga.title)] ?: return
             chapters.forEach { chapter ->
-                provider.getValidChapterDirNames(chapter.name, chapter.scanlator).forEach {
+                provider.getValidChapterDirNames(chapter.name, chapter.scanlator, chapter.url).forEach {
                     if (it in mangaDir.chapterDirs) {
                         mangaDir.chapterDirs -= it
                     }
@@ -300,6 +303,24 @@ class MangaDownloadCache(
      *
      * @param manga the manga to remove.
      */
+    /**
+     * Removes folders that have been deleted from this cache.
+     *
+     * @param folders the list of folder names to remove.
+     * @param manga the manga of the folders.
+     */
+    suspend fun removeFolders(folders: List<String>, manga: Manga) {
+        rootDownloadsDirMutex.withLock {
+            val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return
+            val mangaDir = sourceDir.mangaDirs[provider.getMangaDirName(manga.title)] ?: return
+            folders.forEach {
+                mangaDir.chapterDirs -= it
+            }
+        }
+
+        notifyChanges()
+    }
+
     suspend fun removeManga(manga: Manga) {
         rootDownloadsDirMutex.withLock {
             val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return

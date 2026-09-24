@@ -6,12 +6,13 @@ import mihon.domain.extensionrepo.model.ExtensionRepo
 @Serializable
 data class ExtensionRepoMetaDto(
     val meta: ExtensionRepoDto,
+    val index_v2: String? = null,
 )
 
 @Serializable
 data class ExtensionRepoDto(
     val name: String,
-    val shortName: String?,
+    val shortName: String? = null,
     val website: String,
     val signingKeyFingerprint: String,
 )

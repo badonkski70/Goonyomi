@@ -107,6 +107,7 @@ class MangaUpdatesScreenModel(
                 val downloaded = downloadManager.isChapterDownloaded(
                     update.chapterName,
                     update.scanlator,
+                    update.chapterUrl,
                     update.mangaTitle,
                     update.sourceId,
                 )

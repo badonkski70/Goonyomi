@@ -103,6 +103,16 @@ object SettingsDownloadScreen : SearchableSettings {
                 entries = (1..5).associateWith { it.toString() }.toImmutableMap(),
                 title = stringResource(AYMR.strings.pref_download_slots),
             ),
+            Preference.PreferenceItem.SliderPreference(
+                value = downloadPreferences.parallelPageLimit().get(),
+                title = stringResource(AYMR.strings.pref_download_concurrent_pages),
+                subtitle = stringResource(AYMR.strings.pref_download_concurrent_pages_summary),
+                valueRange = 1..15,
+                onValueChanged = { newValue ->
+                    downloadPreferences.parallelPageLimit().set(newValue)
+                    true
+                },
+            ),
             Preference.PreferenceItem.InfoPreference(stringResource(AYMR.strings.download_slots_info)),
             getDeleteChaptersGroup(
                 downloadPreferences = downloadPreferences,

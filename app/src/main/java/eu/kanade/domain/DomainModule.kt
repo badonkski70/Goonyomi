@@ -137,6 +137,7 @@ import tachiyomi.domain.entries.anime.interactor.SetAnimeSeasonFlags
 import tachiyomi.domain.entries.anime.repository.AnimeRelationRepository
 import tachiyomi.domain.entries.anime.repository.AnimeRepository
 import tachiyomi.domain.entries.manga.interactor.GetDuplicateLibraryManga
+import tachiyomi.domain.entries.manga.interactor.GetAllManga
 import tachiyomi.domain.entries.manga.interactor.GetLibraryManga
 import tachiyomi.domain.entries.manga.interactor.GetManga
 import tachiyomi.domain.entries.manga.interactor.GetMangaByUrlAndSourceId
@@ -264,6 +265,7 @@ class DomainModule : InjektModule {
         addSingletonFactory<MangaRepository> { MangaRepositoryImpl(get()) }
         addFactory { GetDuplicateLibraryManga(get()) }
         addFactory { GetMangaFavorites(get()) }
+        addFactory { GetAllManga(get()) }
         addFactory { GetLibraryManga(get()) }
         addFactory { GetMangaWithChapters(get(), get()) }
         addFactory { GetMangaByUrlAndSourceId(get()) }
@@ -384,7 +386,7 @@ class DomainModule : InjektModule {
         addFactory { TrustAnimeExtension(get(), get()) }
         addFactory { TrustMangaExtension(get(), get()) }
 
-        addFactory { ExtensionRepoService(get(), get()) }
+        addFactory { ExtensionRepoService(get(), get(), get()) }
 
         addSingletonFactory { AnimeExtensionStoreService(get(), get(), get()) }
         addSingletonFactory<AnimeExtensionStoreRepository> { AnimeExtensionStoreRepositoryImpl(get(), get()) }

@@ -5,22 +5,17 @@ import mihon.domain.extensionrepo.exception.SaveExtensionRepoException
 import mihon.domain.extensionrepo.manga.repository.MangaExtensionRepoRepository
 import mihon.domain.extensionrepo.model.ExtensionRepo
 import mihon.domain.extensionrepo.service.ExtensionRepoService
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import tachiyomi.core.common.util.system.logcat
 
 class CreateMangaExtensionRepo(
     private val repository: MangaExtensionRepoRepository,
     private val service: ExtensionRepoService,
 ) {
-    private val repoRegex = """^https://.*/index\.min\.json$""".toRegex()
-
     suspend fun await(indexUrl: String): Result {
-        val formattedIndexUrl = indexUrl.toHttpUrlOrNull()
-            ?.toString()
-            ?.takeIf { it.matches(repoRegex) }
+        val normalized = ExtensionRepoService.normalizeIndexUrl(indexUrl)
             ?: return Result.InvalidUrl
-
-        val baseUrl = formattedIndexUrl.removeSuffix("/index.min.json")
+        val baseUrl = ExtensionRepoService.baseUrlOf(normalized)
+            ?: return Result.InvalidUrl
         return service.fetchRepoDetails(baseUrl)?.let { insert(it) } ?: Result.InvalidUrl
     }
 

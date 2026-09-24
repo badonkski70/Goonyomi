@@ -27,6 +27,7 @@ fun SManga.getComicInfo() = ComicInfo(
     coverArtist = null,
     tags = null,
     categories = null,
+    padding = null,
     source = null,
 )
 
@@ -82,6 +83,7 @@ data class ComicInfo(
     val web: Web?,
     val publishingStatus: PublishingStatusTachiyomi?,
     val categories: CategoriesTachiyomi?,
+    val padding: PaddingTachiyomiSY?,
     val source: SourceAniyomi?,
 ) {
     @XmlElement(false)
@@ -160,6 +162,10 @@ data class ComicInfo(
     @Serializable
     @XmlSerialName("SourceAniyomi", "http://www.w3.org/2001/XMLSchema", "ay")
     data class SourceAniyomi(@XmlValue(true) val value: String = "")
+
+    @Serializable
+    @XmlSerialName("PaddingTachiyomiSY", "http://www.w3.org/2001/XMLSchema", "tysy")
+    data class PaddingTachiyomiSY(@XmlValue(true) val value: String = "")
 }
 
 enum class ComicInfoPublishingStatus(

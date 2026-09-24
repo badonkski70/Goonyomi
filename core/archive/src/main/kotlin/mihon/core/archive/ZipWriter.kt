@@ -6,21 +6,30 @@ import android.system.StructStat
 import com.hippo.unifile.UniFile
 import me.zhanghai.android.libarchive.Archive
 import me.zhanghai.android.libarchive.ArchiveEntry
+import me.zhanghai.android.libarchive.ArchiveEntry.AE_IFREG
 import me.zhanghai.android.libarchive.ArchiveException
 import java.io.Closeable
 import java.nio.ByteBuffer
 
-class ZipWriter(val context: Context, file: UniFile) : Closeable {
+class ZipWriter(
+    val context: Context,
+    file: UniFile,
+    encrypt: Boolean = false,
+) : Closeable {
     private val pfd = file.openFileDescriptor(context, "wt")
     private val archive = Archive.writeNew()
     private val entry = ArchiveEntry.new2(archive)
-    private val buffer = ByteBuffer.allocateDirect(8192)
+    private val buffer = ByteBuffer.allocateDirect(BUFFER_SIZE)
 
     init {
         try {
             Archive.setCharset(archive, Charsets.UTF_8.name().toByteArray())
             Archive.writeSetFormatZip(archive)
             Archive.writeZipSetCompressionStore(archive)
+            if (encrypt) {
+                Archive.writeSetOptions(archive, CbzCrypto.getPreferredEncryptionAlgo())
+                Archive.writeSetPassphrase(archive, CbzCrypto.getDecryptedPasswordCbz())
+            }
             Archive.writeOpenFd(archive, pfd.fd)
         } catch (e: ArchiveException) {
             close()
@@ -47,10 +56,33 @@ class ZipWriter(val context: Context, file: UniFile) : Closeable {
         }
     }
 
+    fun write(fileData: ByteArray, fileName: String) {
+        ArchiveEntry.clear(entry)
+        ArchiveEntry.setPathnameUtf8(entry, fileName)
+        ArchiveEntry.setSize(entry, fileData.size.toLong())
+        ArchiveEntry.setFiletype(entry, AE_IFREG)
+        Archive.writeHeader(archive, entry)
+
+        var position = 0
+        while (position < fileData.size) {
+            val lengthToRead = minOf(BUFFER_SIZE, fileData.size - position)
+            buffer.clear()
+            buffer.put(fileData, position, lengthToRead)
+            buffer.flip()
+            Archive.writeData(archive, buffer)
+            position += lengthToRead
+        }
+        Archive.writeFinishEntry(archive)
+    }
+
     override fun close() {
         ArchiveEntry.free(entry)
         Archive.writeFree(archive)
         pfd.close()
+    }
+
+    companion object {
+        private const val BUFFER_SIZE = 8192
     }
 }
 

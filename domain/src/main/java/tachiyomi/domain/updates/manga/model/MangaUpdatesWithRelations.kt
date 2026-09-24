@@ -7,6 +7,7 @@ data class MangaUpdatesWithRelations(
     val mangaTitle: String,
     val chapterId: Long,
     val chapterName: String,
+    val chapterUrl: String,
     val scanlator: String?,
     val read: Boolean,
     val bookmark: Boolean,

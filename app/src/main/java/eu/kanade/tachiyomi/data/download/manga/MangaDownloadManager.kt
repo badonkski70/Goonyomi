@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.download.manga
 
 import android.content.Context
+import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.data.download.manga.model.MangaDownload
 import eu.kanade.tachiyomi.source.MangaSource
 import eu.kanade.tachiyomi.source.model.Page
@@ -168,6 +169,7 @@ class MangaDownloadManager(
         val chapterDir = provider.findChapterDir(
             chapter.name,
             chapter.scanlator,
+            chapter.url,
             manga.title,
             source,
         )
@@ -195,6 +197,7 @@ class MangaDownloadManager(
     fun isChapterDownloaded(
         chapterName: String,
         chapterScanlator: String?,
+        chapterUrl: String,
         mangaTitle: String,
         sourceId: Long,
         skipCache: Boolean = false,
@@ -202,6 +205,7 @@ class MangaDownloadManager(
         return cache.isChapterDownloaded(
             chapterName,
             chapterScanlator,
+            chapterUrl,
             mangaTitle,
             sourceId,
             skipCache,
@@ -305,6 +309,61 @@ class MangaDownloadManager(
         }
     }
 
+    fun getMangaFolders(source: MangaSource): List<UniFile> {
+        return provider.findSourceDir(source)?.listFiles()?.toList().orEmpty()
+    }
+
+    /**
+     * Deletes the directories of chapters that were read or have no match
+     *
+     * @param allChapters the list of chapters to delete.
+     * @param manga the manga of the chapters.
+     * @param source the source of the chapters.
+     */
+    suspend fun cleanupChapters(
+        allChapters: List<Chapter>,
+        manga: Manga,
+        source: MangaSource,
+        removeRead: Boolean,
+        removeNonFavorite: Boolean,
+    ): Int {
+        var cleaned = 0
+
+        if (removeNonFavorite && !manga.favorite) {
+            val mangaFolder = provider.getMangaDir(manga.title, source).getOrNull()
+            if (mangaFolder != null) {
+                cleaned += 1 + mangaFolder.listFiles().orEmpty().size
+                mangaFolder.delete()
+                cache.removeManga(manga)
+                return cleaned
+            }
+        }
+
+        val filesWithNoChapter = provider.findUnmatchedChapterDirs(allChapters, manga, source)
+        cleaned += filesWithNoChapter.size
+        cache.removeFolders(filesWithNoChapter.mapNotNull { it.name }, manga)
+        filesWithNoChapter.forEach { it.delete() }
+
+        if (removeRead) {
+            val readChapters = allChapters.filter { it.read }
+            val readChapterDirs = provider.findChapterDirs(readChapters, manga, source)
+            readChapterDirs.second.forEach { it.delete() }
+            cleaned += readChapterDirs.second.size
+            cache.removeChapters(readChapters, manga)
+        }
+
+        if (cache.getDownloadCount(manga) == 0) {
+            val mangaFolder = provider.getMangaDir(manga.title, source).getOrNull()
+            if (mangaFolder != null && !mangaFolder.listFiles().isNullOrEmpty()) {
+                mangaFolder.delete()
+                cache.removeManga(manga)
+            } else {
+                logcat(LogPriority.ERROR) { "Cache and download folder doesn't match for ${manga.title}" }
+            }
+        }
+        return cleaned
+    }
+
     private fun removeFromDownloadQueue(chapters: List<Chapter>) {
         val wasRunning = downloader.isRunning
         if (wasRunning) {
@@ -383,15 +442,18 @@ class MangaDownloadManager(
         oldChapter: Chapter,
         newChapter: Chapter,
     ) {
-        val oldNames = provider.getValidChapterDirNames(oldChapter.name, oldChapter.scanlator)
-        val mangaDir = provider.getMangaDir(manga.title, source)
+        val oldNames = provider.getValidChapterDirNames(oldChapter.name, oldChapter.scanlator, oldChapter.url)
+        val mangaDir = provider.getMangaDir(manga.title, source).getOrElse {
+            logcat(LogPriority.ERROR, it) { "Manga download folder doesn't exist. Skipping renaming after source sync" }
+            return
+        }
 
         // Assume there's only 1 version of the chapter name formats present
         val oldDownload = oldNames.asSequence()
             .mapNotNull { mangaDir.findFile(it) }
             .firstOrNull() ?: return
 
-        var newName = provider.getChapterDirName(newChapter.name, newChapter.scanlator)
+        var newName = provider.getChapterDirName(newChapter.name, newChapter.scanlator, newChapter.url)
         if (oldDownload.isFile && oldDownload.extension == "cbz") {
             newName += ".cbz"
         }

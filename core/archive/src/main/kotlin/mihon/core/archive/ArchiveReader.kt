@@ -11,12 +11,24 @@ class ArchiveReader(pfd: ParcelFileDescriptor) : Closeable {
     private val size = pfd.statSize
     private val address = Os.mmap(0, size, OsConstants.PROT_READ, OsConstants.MAP_PRIVATE, pfd.fileDescriptor, 0)
 
-    fun <T> useEntries(block: (Sequence<ArchiveEntry>) -> T): T = ArchiveInputStream(address, size).use {
-        block(generateSequence { it.getNextEntry() })
+    var encrypted: Boolean = false
+        private set
+    var wrongPassword: Boolean? = null
+        private set
+    val archiveHashCode = pfd.hashCode()
+
+    init {
+        checkEncryptionStatus()
     }
 
+    fun <T> useEntries(block: (Sequence<ArchiveEntry>) -> T): T = ArchiveInputStream(
+        address,
+        size,
+        encrypted,
+    ).use { block(generateSequence { it.getNextEntry() }) }
+
     fun getInputStream(entryName: String): InputStream? {
-        val archive = mihon.core.archive.ArchiveInputStream(address, size)
+        val archive = ArchiveInputStream(address, size, encrypted)
         try {
             while (true) {
                 val entry = archive.getNextEntry() ?: break
@@ -30,6 +42,39 @@ class ArchiveReader(pfd: ParcelFileDescriptor) : Closeable {
         }
         archive.close()
         return null
+    }
+
+    private fun checkEncryptionStatus() {
+        val archive = ArchiveInputStream(address, size)
+        try {
+            while (true) {
+                val entry = archive.getNextEntry() ?: break
+                if (entry.isEncrypted) {
+                    encrypted = true
+                    isPasswordIncorrect(entry.name)
+                    break
+                }
+            }
+        } catch (e: ArchiveException) {
+            archive.close()
+            throw e
+        }
+        archive.close()
+    }
+
+    private fun isPasswordIncorrect(entryName: String) {
+        try {
+            getInputStream(entryName).use { stream ->
+                stream!!.read()
+            }
+        } catch (e: ArchiveException) {
+            if (e.message == "Incorrect passphrase") {
+                wrongPassword = true
+                return
+            }
+            throw e
+        }
+        wrongPassword = false
     }
 
     override fun close() {

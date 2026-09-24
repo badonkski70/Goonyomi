@@ -92,6 +92,8 @@ class LibraryPreferences(
 
     fun autoClearItemCache() = preferenceStore.getBoolean("auto_clear_chapter_cache", false)
 
+    fun disallowNonAsciiFilenames() = preferenceStore.getBoolean("disallow_non_ascii_filenames", false)
+
     // Random Sort Seed
 
     fun randomAnimeSortSeed() = preferenceStore.getInt("library_random_anime_sort_seed", 0)

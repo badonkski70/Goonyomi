@@ -6,9 +6,18 @@ import android.content.Intent
 import android.provider.Settings
 import android.webkit.WebStorage
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -19,8 +28,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -35,6 +49,7 @@ import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.manga.MangaDownloadCache
+import eu.kanade.tachiyomi.data.download.manga.MangaDownloadManager
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.data.library.anime.AnimeMetadataUpdateJob
 import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateJob
@@ -56,6 +71,7 @@ import eu.kanade.tachiyomi.network.PREF_DOH_QUAD9
 import eu.kanade.tachiyomi.network.PREF_DOH_SHECAN
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.util.CrashLogUtil
+import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.isShizukuInstalled
@@ -69,14 +85,22 @@ import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import okhttp3.Headers
+import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.domain.entries.manga.interactor.GetAllManga
 import tachiyomi.domain.entries.manga.interactor.ResetMangaViewerFlags
+import tachiyomi.domain.items.chapter.interactor.GetChaptersByMangaId
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.source.manga.service.MangaSourceManager
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.presentation.core.components.LabeledCheckbox
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -97,6 +121,7 @@ object SettingsAdvancedScreen : SearchableSettings {
 
         val basePreferences = remember { Injekt.get<BasePreferences>() }
         val networkPreferences = remember { Injekt.get<NetworkPreferences>() }
+        val downloadPreferences = remember { Injekt.get<DownloadPreferences>() }
 
         return listOf(
             Preference.PreferenceItem.TextPreference(
@@ -141,6 +166,8 @@ object SettingsAdvancedScreen : SearchableSettings {
             getReaderGroup(basePreferences = basePreferences),
             getExtensionsGroup(basePreferences = basePreferences),
             // SY -->
+            getDownloadsGroup(downloadPreferences = downloadPreferences),
+            getDownloaderGroup(),
             getDataSaverGroup(),
             // SY <--
         )
@@ -341,9 +368,105 @@ object SettingsAdvancedScreen : SearchableSettings {
                         }
                     },
                 ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = Injekt.get<LibraryPreferences>().disallowNonAsciiFilenames(),
+                    title = stringResource(AYMR.strings.pref_disallow_non_ascii_filenames),
+                    subtitle = stringResource(AYMR.strings.pref_disallow_non_ascii_filenames_details),
+                ),
             ),
         )
     }
+
+    // SY -->
+    @Composable
+    private fun getDownloadsGroup(
+        downloadPreferences: DownloadPreferences,
+    ): Preference.PreferenceGroup {
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_category_downloads),
+            preferenceItems = persistentListOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = downloadPreferences.includeChapterUrlHash(),
+                    title = stringResource(AYMR.strings.pref_include_chapter_url_hash),
+                    subtitle = stringResource(AYMR.strings.pref_include_chapter_url_hash_desc),
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getDownloaderGroup(): Preference.PreferenceGroup {
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+        var dialogOpen by remember { mutableStateOf(false) }
+        if (dialogOpen) {
+            CleanupDownloadsDialog(
+                onDismissRequest = { dialogOpen = false },
+                onCleanupDownloads = { removeRead, removeNonFavorite ->
+                    dialogOpen = false
+                    context.toast(AYMR.strings.starting_cleanup)
+                    scope.launchNonCancellable {
+                        val mangaList = Injekt.get<GetAllManga>().await()
+                        val downloadManager: MangaDownloadManager = Injekt.get()
+                        var foldersCleared = 0
+                        Injekt.get<MangaSourceManager>().getOnlineSources().forEach { source ->
+                            val mangaFolders = downloadManager.getMangaFolders(source)
+                            val sourceManga = mangaList
+                                .asSequence()
+                                .filter { it.source == source.id }
+                                .map { it to DiskUtil.buildValidFilename(it.title) }
+                                .toList()
+
+                            mangaFolders.forEach mangaFolder@{ mangaFolder ->
+                                val manga = sourceManga.find { (_, folderName) ->
+                                    folderName == mangaFolder.name
+                                }?.first
+                                if (manga == null) {
+                                    // download is orphaned delete it
+                                    foldersCleared += 1 +
+                                        mangaFolder.listFiles().orEmpty().size
+                                    mangaFolder.delete()
+                                } else {
+                                    val chapterList = Injekt.get<GetChaptersByMangaId>().await(manga.id)
+                                    foldersCleared += downloadManager.cleanupChapters(
+                                        chapterList,
+                                        manga,
+                                        source,
+                                        removeRead,
+                                        removeNonFavorite,
+                                    )
+                                }
+                            }
+                        }
+                        withUIContext {
+                            val cleanupString =
+                                if (foldersCleared == 0) {
+                                    context.stringResource(AYMR.strings.no_folders_to_cleanup)
+                                } else {
+                                    context.pluralStringResource(
+                                        AYMR.plurals.cleanup_done,
+                                        foldersCleared,
+                                        foldersCleared,
+                                    )
+                                }
+                            context.toast(cleanupString, Toast.LENGTH_LONG)
+                        }
+                    }
+                },
+            )
+        }
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.download_notifier_downloader_title),
+            preferenceItems = persistentListOf(
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(AYMR.strings.clean_up_downloaded_chapters),
+                    subtitle = stringResource(AYMR.strings.delete_unused_chapters),
+                    onClick = { dialogOpen = true },
+                ),
+            ),
+        )
+    }
+    // SY <--
 
     @Composable
     private fun getReaderGroup(
@@ -553,5 +676,57 @@ object SettingsAdvancedScreen : SearchableSettings {
             ),
         )
     }
-    // SY <--
+
+    @Composable
+    fun CleanupDownloadsDialog(
+        onDismissRequest: () -> Unit,
+        onCleanupDownloads: (removeRead: Boolean, removeNonFavorite: Boolean) -> Unit,
+    ) {
+        val deleteOrphanedDownloads = stringResource(AYMR.strings.clean_orphaned_downloads)
+        val deleteReadDownloads = stringResource(AYMR.strings.clean_read_downloads)
+        val deleteNotInLibrary = stringResource(AYMR.strings.clean_read_entries_not_in_library)
+        val options = remember(listOf(deleteOrphanedDownloads, deleteReadDownloads, deleteNotInLibrary)) { listOf(deleteOrphanedDownloads, deleteReadDownloads, deleteNotInLibrary) }
+        val selection = remember { options.toMutableStateList() }
+        AlertDialog(
+            onDismissRequest = onDismissRequest,
+            title = { Text(text = stringResource(AYMR.strings.clean_up_downloaded_chapters)) },
+            text = {
+                LazyColumn {
+                    options.forEachIndexed { index, option ->
+                        item {
+                            LabeledCheckbox(
+                                label = option,
+                                checked = index == 0 || selection.contains(option),
+                                onCheckedChange = {
+                                    when (it) {
+                                        true -> selection.add(option)
+                                        false -> selection.remove(option)
+                                    }
+                                },
+                            )
+                        }
+                    }
+                }
+            },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = true,
+            ),
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val removeRead = options[1] in selection
+                        val removeNonFavorite = options[2] in selection
+                        onCleanupDownloads(removeRead, removeNonFavorite)
+                    },
+                ) {
+                    Text(text = stringResource(MR.strings.action_ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissRequest) {
+                    Text(text = stringResource(MR.strings.action_cancel))
+                }
+            },
+        )
+    }
 }

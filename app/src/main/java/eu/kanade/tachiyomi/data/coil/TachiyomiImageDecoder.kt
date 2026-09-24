@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.coil
 
+import android.app.Application
 import android.graphics.Bitmap
 import coil3.ImageLoader
 import coil3.asImage
@@ -10,18 +11,36 @@ import coil3.decode.ImageSource
 import coil3.fetch.SourceFetchResult
 import coil3.request.Options
 import coil3.request.bitmapConfig
+import com.hippo.unifile.UniFile
+import mihon.core.archive.CbzCrypto.detectCoverImageArchive
+import mihon.core.archive.CbzCrypto.getCoverStream
+import mihon.core.archive.archiveReader
 import okio.BufferedSource
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.decoder.ImageDecoder
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+import java.io.BufferedInputStream
 
 /**
  * A [Decoder] that uses built-in [ImageDecoder] to decode images that is not supported by the system.
  */
 class TachiyomiImageDecoder(private val resources: ImageSource, private val options: Options) : Decoder {
+    private val context = Injekt.get<Application>()
 
     override suspend fun decode(): DecodeResult {
+        var coverStream: BufferedInputStream? = null
+        if (resources.sourceOrNull()?.peek()?.use { detectCoverImageArchive(it.inputStream()) } == true) {
+            if (resources.source().peek().use { ImageUtil.findImageType(it.inputStream()) == null }) {
+                coverStream = UniFile.fromFile(resources.file().toFile())
+                    ?.archiveReader(context = context)
+                    ?.getCoverStream()
+            }
+        }
         val decoder = resources.sourceOrNull()?.use {
-            ImageDecoder.newInstance(it.inputStream(), options.cropBorders, displayProfile)
+            coverStream.use { coverStream ->
+                ImageDecoder.newInstance(coverStream ?: it.inputStream(), options.cropBorders, displayProfile)
+            }
         }
 
         check(decoder != null && decoder.width > 0 && decoder.height > 0) { "Failed to initialize decoder" }
@@ -70,8 +89,11 @@ class TachiyomiImageDecoder(private val resources: ImageSource, private val opti
         }
 
         private fun isApplicable(source: BufferedSource): Boolean {
-            val type = source.peek().inputStream().use {
+            val type = source.peek().inputStream().buffered().use {
                 ImageUtil.findImageType(it)
+            }
+            source.peek().inputStream().use { stream ->
+                if (detectCoverImageArchive(stream)) return true
             }
             return when (type) {
                 ImageUtil.ImageType.AVIF, ImageUtil.ImageType.JXL, ImageUtil.ImageType.HEIF -> true

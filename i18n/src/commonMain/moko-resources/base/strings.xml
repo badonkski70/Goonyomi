@@ -995,4 +995,9 @@
     <string name="exception_http">HTTP %d, check website in WebView</string>
     <string name="exception_offline">No Internet connection</string>
     <string name="exception_unknown_host">Couldn\'t reach %s</string>
+    <string name="storage_failed_to_create_download_directory">Failed to create download directory</string>
+    <string name="storage_failed_to_create_directory">Failed to create directory: %s</string>
+    <string name="aes_128">AES 128</string>
+    <string name="aes_256">AES 256</string>
+    <string name="standard_zip_encryption">Standard zip encryption (fast but insecure)</string>
 </resources>

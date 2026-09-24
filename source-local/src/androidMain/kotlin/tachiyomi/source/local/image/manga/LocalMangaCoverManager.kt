@@ -4,12 +4,14 @@ import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.util.storage.DiskUtil
+import mihon.core.archive.ZipWriter
 import tachiyomi.core.common.storage.nameWithoutExtension
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.source.local.io.manga.LocalMangaSourceFileSystem
 import java.io.InputStream
 
 private const val DEFAULT_COVER_NAME = "cover.jpg"
+private const val COVER_ARCHIVE_NAME = "cover.cbi"
 
 actual class LocalMangaCoverManager(
     private val context: Context,
@@ -21,12 +23,15 @@ actual class LocalMangaCoverManager(
             // Get all file whose names start with "cover"
             .filter { it.isFile && it.nameWithoutExtension.equals("cover", ignoreCase = true) }
             // Get the first actual image
-            .firstOrNull { ImageUtil.isImage(it.name) { it.openInputStream() } }
+            .firstOrNull {
+                ImageUtil.isImage(it.name) { it.openInputStream() } || it.name == COVER_ARCHIVE_NAME
+            }
     }
 
     actual fun update(
         manga: SManga,
         inputStream: InputStream,
+        encrypted: Boolean,
     ): UniFile? {
         val directory = fileSystem.getMangaDirectory(manga.url)
         if (directory == null) {
@@ -34,17 +39,34 @@ actual class LocalMangaCoverManager(
             return null
         }
 
-        val targetFile = find(manga.url) ?: directory.createFile(DEFAULT_COVER_NAME)!!
-
-        inputStream.use { input ->
-            targetFile.openOutputStream().use { output ->
-                input.copyTo(output)
+        var targetFile = find(manga.url)
+        if (targetFile == null) {
+            targetFile = if (encrypted) {
+                directory.createFile(COVER_ARCHIVE_NAME)
+            } else {
+                directory.createFile(DEFAULT_COVER_NAME)
             }
         }
 
-        DiskUtil.createNoMediaFile(directory, context)
+        targetFile!!
 
-        manga.thumbnail_url = targetFile.uri.toString()
-        return targetFile
+        inputStream.use { input ->
+            if (encrypted) {
+                ZipWriter(context, targetFile, encrypt = true).use { writer ->
+                    writer.write(inputStream.readBytes(), DEFAULT_COVER_NAME)
+                }
+                DiskUtil.createNoMediaFile(directory, context)
+
+                manga.thumbnail_url = targetFile.uri.toString()
+                return targetFile
+            } else {
+                targetFile.openOutputStream().use { output ->
+                    input.copyTo(output)
+                }
+                DiskUtil.createNoMediaFile(directory, context)
+                manga.thumbnail_url = targetFile.uri.toString()
+                return targetFile
+            }
+        }
     }
 }

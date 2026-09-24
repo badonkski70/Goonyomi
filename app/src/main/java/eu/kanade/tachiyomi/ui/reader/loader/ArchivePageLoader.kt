@@ -10,6 +10,14 @@ import tachiyomi.core.common.util.system.ImageUtil
  * Loader used to load a chapter from an archive file.
  */
 internal class ArchivePageLoader(private val reader: ArchiveReader) : PageLoader() {
+    init {
+        reader.wrongPassword?.let { wrongPassword ->
+            if (wrongPassword) {
+                error("Incorrect archive password")
+            }
+        }
+    }
+
     override var isLocal: Boolean = true
 
     override suspend fun getPages(): List<ReaderPage> = reader.useEntries { entries ->

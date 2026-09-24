@@ -172,6 +172,7 @@ class ReaderViewModel @JvmOverloads constructor(
                                         !downloadManager.isChapterDownloaded(
                                             it.name,
                                             it.scanlator,
+                                            it.url,
                                             manga.title,
                                             manga.source,
                                         )
@@ -182,6 +183,7 @@ class ReaderViewModel @JvmOverloads constructor(
                                         downloadManager.isChapterDownloaded(
                                             it.name,
                                             it.scanlator,
+                                            it.url,
                                             manga.title,
                                             manga.source,
                                         )
@@ -395,6 +397,7 @@ class ReaderViewModel @JvmOverloads constructor(
             val isDownloaded = downloadManager.isChapterDownloaded(
                 dbChapter.name,
                 dbChapter.scanlator,
+                dbChapter.url,
                 manga.title,
                 manga.source,
                 skipCache = true,
@@ -471,6 +474,7 @@ class ReaderViewModel @JvmOverloads constructor(
             val isNextChapterDownloaded = downloadManager.isChapterDownloaded(
                 nextChapter.name,
                 nextChapter.scanlator,
+                nextChapter.url,
                 manga.title,
                 manga.source,
             )

@@ -6,8 +6,13 @@ import me.zhanghai.android.libarchive.ArchiveException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import kotlin.concurrent.Volatile
+import mihon.core.archive.ArchiveEntry as MihonArchiveEntry
 
-internal class ArchiveInputStream(buffer: Long, size: Long) : InputStream() {
+class ArchiveInputStream(
+    buffer: Long,
+    size: Long,
+    encrypted: Boolean = false,
+) : InputStream() {
     private val lock = Any()
 
     @Volatile
@@ -17,6 +22,9 @@ internal class ArchiveInputStream(buffer: Long, size: Long) : InputStream() {
 
     init {
         try {
+            if (encrypted) {
+                Archive.readAddPassphrase(archive, CbzCrypto.getDecryptedPasswordCbz())
+            }
             Archive.setCharset(archive, Charsets.UTF_8.name().toByteArray())
             Archive.readSupportFilterAll(archive)
             Archive.readSupportFormatAll(archive)
@@ -55,9 +63,16 @@ internal class ArchiveInputStream(buffer: Long, size: Long) : InputStream() {
         Archive.readFree(archive)
     }
 
-    fun getNextEntry() = Archive.readNextHeader(archive).takeUnless { it == 0L }?.let { entry ->
-        val name = ArchiveEntry.pathnameUtf8(entry) ?: ArchiveEntry.pathname(entry)?.decodeToString() ?: return null
-        val isFile = ArchiveEntry.filetype(entry) == ArchiveEntry.AE_IFREG
-        ArchiveEntry(name, isFile)
+    fun getNextEntry(): MihonArchiveEntry? {
+        return Archive.readNextHeader(archive).takeUnless { it == 0L }?.let { entry ->
+            val name = ArchiveEntry.pathnameUtf8(entry) ?: ArchiveEntry.pathname(entry)?.decodeToString() ?: return null
+            val isFile = ArchiveEntry.filetype(entry) == ArchiveEntry.AE_IFREG
+            val isEncrypted = ArchiveEntry.isEncrypted(entry)
+            MihonArchiveEntry(
+                name,
+                isFile,
+                isEncrypted,
+            )
+        }
     }
 }
