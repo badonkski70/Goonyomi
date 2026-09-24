@@ -58,8 +58,11 @@ class GetApplicationRelease(
             // tagged as something like "r1234"
             newVersion.toInt() > commitCount
         } else {
-            // Release builds: based on releases in "tachiyomiorg/tachiyomi" repo
-            // tagged as something like "v0.1.2"
+            // Goonyomi: rolling releases tagged r<commitCount>
+            if ("." !in newVersion) {
+                return (newVersion.toIntOrNull() ?: return false) > commitCount
+            }
+            // Release builds: based on releases tagged something like "v0.1.2"
             val oldVersion = versionName.replace("[^\\d.]".toRegex(), "")
 
             val newSemVer = newVersion.split(".").map { it.toInt() }

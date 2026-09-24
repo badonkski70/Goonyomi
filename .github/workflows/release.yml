@@ -18,22 +18,26 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Build debug APKs
+      - name: Build release APKs
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: true
-      - run: ./gradlew assembleRelease
+      - run: ./gradlew assembleRelease -Penable-updater
 
-      - name: Delete release if it exists
+      - name: Delete old releases
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release delete latest --yes || true
+        run: |
+          for tag in $(gh release list --json tagName --jq '.[].tagName'); do
+            gh release delete "$tag" --yes --cleanup-tag || true
+          done
 
       - name: Create release and upload APKs
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create latest \
-            --title "Latest build (${{ github.sha }})" \
+          COUNT=$(git rev-list --count HEAD)
+          gh release create "r$COUNT" \
+            --title "Goonyomi r$COUNT (${{ github.sha }})" \
             --notes "Auto-built from ${{ github.sha }}" \
             app/build/outputs/apk/release/*.apk
