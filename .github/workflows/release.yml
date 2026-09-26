@@ -3,6 +3,10 @@ name: Release APK
 on:
   push:
     branches: [main]
+    # A push touching only these paths builds an identical APK, so skip the
+    # ~11 minute build and the 600 MB of uploads.
+    paths-ignore:
+      - '**.md'
 
 permissions:
   contents: write
