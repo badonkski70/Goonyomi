@@ -6,9 +6,30 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.service.calculateEpisodeGap
+import tachiyomi.domain.items.episode.service.missingEntriesCount
 
 @Execution(ExecutionMode.CONCURRENT)
 class MissingItemsTest {
+
+    @Test
+    fun `missingEntriesCount returns 0 when empty list`() {
+        emptyList<Double>().missingEntriesCount() shouldBe 0
+    }
+
+    @Test
+    fun `missingEntriesCount returns 0 when all unknown item numbers`() {
+        listOf(-1.0, -1.0, -1.0).missingEntriesCount() shouldBe 0
+    }
+
+    @Test
+    fun `missingEntriesCount handles repeated base item numbers`() {
+        listOf(1.0, 1.0, 1.1, 1.5, 1.6, 1.99).missingEntriesCount() shouldBe 0
+    }
+
+    @Test
+    fun `missingEntriesCount returns number of missing items`() {
+        listOf(-1.0, 1.0, 2.0, 2.2, 4.0, 6.0, 10.0, 10.0).missingEntriesCount() shouldBe 5
+    }
 
     @Test
     fun `calculateEpisodeGap returns difference`() {

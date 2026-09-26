@@ -29,12 +29,17 @@ jobs:
         with:
           cache-read-only: true
       - run: ./gradlew assembleRelease -Penable-updater
+      # assembleRelease never compiles the test source set, so a refactor can
+      # leave broken tests behind and still look green. ~15s against an 11
+      # minute build.
+      - run: ./gradlew :domain:test
 
       - name: Delete old releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for tag in $(gh release list --json tagName --jq '.[].tagName'); do
+          # Keep the two newest so a bad release has something to fall back to.
+          for tag in $(gh release list --json tagName --jq '.[].tagName' | tail -n +3); do
             gh release delete "$tag" --yes --cleanup-tag || true
           done
 
