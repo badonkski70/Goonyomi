@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.toImmutableList
 import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
-import tachiyomi.domain.entries.manga.interactor.MangaFetchInterval
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.WheelTextPicker
@@ -37,9 +36,8 @@ import kotlin.math.absoluteValue
 fun DeleteItemsDialog(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
-    isManga: Boolean,
 ) {
-    val subtitle = if (isManga) MR.strings.confirm_delete_chapters else AYMR.strings.confirm_delete_episodes
+    val subtitle = AYMR.strings.confirm_delete_episodes
     AlertDialog(
         onDismissRequest = onDismissRequest,
         dismissButton = {
@@ -71,7 +69,6 @@ fun SetIntervalDialog(
     interval: Int,
     nextUpdate: Instant?,
     onDismissRequest: () -> Unit,
-    isManga: Boolean,
     onValueChanged: ((Int) -> Unit)? = null,
 ) {
     var selectedInterval by rememberSaveable { mutableIntStateOf(if (interval < 0) -interval else 0) }
@@ -93,11 +90,9 @@ fun SetIntervalDialog(
                 if (nextUpdateDays != null && nextUpdateDays >= 0 && interval >= 0) {
                     Text(
                         stringResource(
-                            if (isManga) {
-                                MR.strings.manga_interval_expected_update
-                            } else {
+                            
                                 AYMR.strings.anime_interval_expected_update
-                            },
+                            ,
                             pluralStringResource(
                                 MR.plurals.day,
                                 count = nextUpdateDays,
@@ -113,11 +108,9 @@ fun SetIntervalDialog(
                 } else {
                     Text(
                         stringResource(
-                            if (isManga) {
-                                MR.strings.manga_interval_expected_update_null
-                            } else {
+                            
                                 AYMR.strings.anime_interval_expected_update_null
-                            },
+                            ,
                         ),
                     )
                 }
@@ -131,11 +124,9 @@ fun SetIntervalDialog(
                         contentAlignment = Alignment.Center,
                     ) {
                         val size = DpSize(width = maxWidth / 2, height = 128.dp)
-                        val maxInterval = if (isManga) {
-                            MangaFetchInterval.MAX_INTERVAL
-                        } else {
+                        val maxInterval = 
                             AnimeFetchInterval.MAX_INTERVAL
-                        }
+                        
                         val items = (0..maxInterval)
                             .map {
                                 if (it == 0) {

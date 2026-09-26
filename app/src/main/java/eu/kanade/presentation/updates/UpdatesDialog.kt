@@ -12,9 +12,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun UpdatesDeleteConfirmationDialog(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
-    isManga: Boolean,
 ) {
-    val title = if (isManga) MR.strings.confirm_delete_chapters else AYMR.strings.confirm_delete_episodes
+    val title = AYMR.strings.confirm_delete_episodes
     AlertDialog(
         text = {
             Text(text = stringResource(title))

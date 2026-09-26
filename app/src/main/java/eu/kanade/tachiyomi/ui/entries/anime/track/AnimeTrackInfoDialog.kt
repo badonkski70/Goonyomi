@@ -364,7 +364,6 @@ private data class TrackEpisodeSelectorScreen(
                 navigator.pop()
             },
             onDismissRequest = navigator::pop,
-            isManga = false,
         )
     }
 

@@ -17,16 +17,11 @@ class MergeSortTypeDirectionMigration : Migration {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
         prefs.edit {
-            val mangasort = prefs.getString(
-                libraryPreferences.mangaSortingMode().key(),
-                null,
-            ) ?: return@edit
             val animesort = prefs.getString(
                 libraryPreferences.animeSortingMode().key(),
                 null,
             ) ?: return@edit
             val direction = prefs.getString("library_sorting_ascending", "ASCENDING")!!
-            putString(libraryPreferences.mangaSortingMode().key(), "$mangasort,$direction")
             putString(libraryPreferences.animeSortingMode().key(), "$animesort,$direction")
             remove("library_sorting_ascending")
         }

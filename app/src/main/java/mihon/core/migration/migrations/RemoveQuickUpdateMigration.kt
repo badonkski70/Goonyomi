@@ -2,7 +2,6 @@ package mihon.core.migration.migrations
 
 import android.app.Application
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
-import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateJob
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -18,8 +17,7 @@ class RemoveQuickUpdateMigration : Migration {
         val updateInterval = libraryPreferences.autoUpdateInterval().get()
         if (updateInterval in listOf(3, 4, 6, 8)) {
             libraryPreferences.autoUpdateInterval().set(12)
-            MangaLibraryUpdateJob.setupTask(context, 12)
-            AnimeLibraryUpdateJob.setupTask(context, 12)
+                AnimeLibraryUpdateJob.setupTask(context, 12)
         }
 
         return true

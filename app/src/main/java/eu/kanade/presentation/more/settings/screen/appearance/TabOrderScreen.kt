@@ -53,7 +53,6 @@ class TabOrderScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val orderRaw by uiPreferences.tabOrder().collectAsState()
         val showAnime by uiPreferences.showAnimeTab().collectAsState()
-        val showManga by uiPreferences.showMangaLibraryTab().collectAsState()
         val showUpdates by uiPreferences.showUpdatesTab().collectAsState()
         val showHistory by uiPreferences.showHistoryTab().collectAsState()
         val showBrowse by uiPreferences.showBrowseTab().collectAsState()
@@ -86,7 +85,6 @@ class TabOrderScreen : Screen() {
 val config = NavStyle.tabsConfig(
             order = NavStyle.parseOrder(orderRaw),
             showAnime = showAnime,
-            showManga = showManga,
             showUpdates = showUpdates,
             showHistory = showHistory,
             showBrowse = showBrowse,

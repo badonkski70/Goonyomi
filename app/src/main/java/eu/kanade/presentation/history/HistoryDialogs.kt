@@ -24,7 +24,6 @@ import kotlin.random.Random
 fun HistoryDeleteDialog(
     onDismissRequest: () -> Unit,
     onDelete: (Boolean) -> Unit,
-    isManga: Boolean,
 ) {
     var removeEverything by remember { mutableStateOf(false) }
 
@@ -36,19 +35,15 @@ fun HistoryDeleteDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
             ) {
-                val subtitle = if (isManga) {
-                    MR.strings.dialog_with_checkbox_remove_description
-                } else {
+                val subtitle = 
                     AYMR.strings.dialog_with_checkbox_remove_description_anime
-                }
+                
                 Text(text = stringResource(subtitle))
 
                 LabeledCheckbox(
-                    label = if (isManga) {
-                        stringResource(AYMR.strings.dialog_with_checkbox_reset)
-                    } else {
+                    label = 
                         stringResource(AYMR.strings.dialog_with_checkbox_reset_anime)
-                    },
+                    ,
                     checked = removeEverything,
                     onCheckedChange = { removeEverything = it },
                 )
@@ -107,7 +102,6 @@ private fun HistoryDeleteDialogPreview() {
         HistoryDeleteDialog(
             onDismissRequest = {},
             onDelete = {},
-            isManga = Random.nextBoolean(),
         )
     }
 }

@@ -52,7 +52,6 @@ import eu.kanade.presentation.more.settings.widget.PrefsHorizontalPadding
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
-import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.export.ExportEntry
 import eu.kanade.tachiyomi.data.export.ExportEntry.Companion.toExportEntry
 import eu.kanade.tachiyomi.data.export.LibraryExporter
@@ -72,7 +71,6 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
-import tachiyomi.domain.entries.manga.interactor.GetMangaFavorites
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.MR
@@ -290,10 +288,6 @@ object SettingsDataScreen : SearchableSettings {
         val scope = rememberCoroutineScope()
         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
 
-        val chapterCache = remember { Injekt.get<ChapterCache>() }
-        var cacheReadableSizeSema by remember { mutableIntStateOf(0) }
-        val cacheReadableSize = remember(cacheReadableSizeSema) { chapterCache.readableSize }
-
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_storage_usage),
             preferenceItems = persistentListOf(
@@ -317,24 +311,6 @@ object SettingsDataScreen : SearchableSettings {
                     },
                 ),
 
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(AYMR.strings.pref_clear_chapter_cache),
-                    subtitle = stringResource(MR.strings.used_cache, cacheReadableSize),
-                    onClick = {
-                        scope.launchNonCancellable {
-                            try {
-                                val deletedFiles = chapterCache.clear()
-                                withUIContext {
-                                    context.toast(context.stringResource(MR.strings.cache_deleted, deletedFiles))
-                                    cacheReadableSizeSema++
-                                }
-                            } catch (e: Throwable) {
-                                logcat(LogPriority.ERROR, e)
-                                withUIContext { context.toast(MR.strings.cache_delete_error) }
-                            }
-                        }
-                    },
-                ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.autoClearItemCache(),
                     title = stringResource(AYMR.strings.pref_auto_clear_chapter_cache),
@@ -361,12 +337,10 @@ object SettingsDataScreen : SearchableSettings {
         val scope = rememberCoroutineScope()
 
         val getAnimeFavorites = remember { Injekt.get<GetAnimeFavorites>() }
-        val getMangaFavorites = remember { Injekt.get<GetMangaFavorites>() }
 
         var favorites by remember { mutableStateOf<List<ExportEntry>>(emptyList()) }
         LaunchedEffect(Unit) {
-            favorites = getAnimeFavorites.await().map { it.toExportEntry() } +
-                getMangaFavorites.await().map { it.toExportEntry() }
+            favorites = getAnimeFavorites.await().map { it.toExportEntry() }
         }
 
         val saveFileLauncher = rememberLauncherForActivityResult(

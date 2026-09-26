@@ -18,23 +18,6 @@ class MigrateToTriStateMigration : Migration {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
         prefs.edit {
-            putInt(
-                libraryPreferences.filterDownloadedManga().key(),
-                convertBooleanPrefToTriState(prefs, "pref_filter_downloaded_key"),
-            )
-            remove("pref_filter_downloaded_key")
-
-            putInt(
-                libraryPreferences.filterUnread().key(),
-                convertBooleanPrefToTriState(prefs, "pref_filter_unread_key"),
-            )
-            remove("pref_filter_unread_key")
-
-            putInt(
-                libraryPreferences.filterCompletedManga().key(),
-                convertBooleanPrefToTriState(prefs, "pref_filter_completed_key"),
-            )
-            remove("pref_filter_completed_key")
         }
 
         return true

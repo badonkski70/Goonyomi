@@ -2,6 +2,7 @@ package eu.kanade.presentation.entries.anime.components
 
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -52,7 +53,6 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.entries.EditCoverAction
 import eu.kanade.tachiyomi.data.coil.useBackground
-import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.domain.entries.anime.model.Anime
@@ -198,10 +198,8 @@ fun AnimeImagesDialog(
                 ) { page ->
                     AndroidView(
                         factory = {
-                            ReaderPageImageView(it).apply {
-                                onViewClicked = onDismissRequest
-                                clipToPadding = false
-                                clipChildren = false
+                            AppCompatImageView(it).apply {
+                                setOnClickListener { onDismissRequest() }
                             }
                         },
                         update = { view ->
@@ -221,7 +219,7 @@ fun AnimeImagesDialog(
                                             it.bitmap.copy(Bitmap.Config.HARDWARE, false),
                                         )
                                     } ?: drawable
-                                    view.setImage(copy, ReaderPageImageView.Config(zoomDuration = 500))
+                                    view.setImageDrawable(copy)
                                 }
                                 .build()
                             context.imageLoader.enqueue(request)

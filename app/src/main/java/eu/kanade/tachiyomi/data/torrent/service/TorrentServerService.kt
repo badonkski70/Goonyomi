@@ -112,7 +112,7 @@ class TorrentServerService : Service() {
             )
 
         val builder = context.notificationBuilder(Notifications.CHANNEL_TORRENT_SERVER) {
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(R.drawable.ic_goonyomi_emoji)
             setContentText(stringResource(AYMR.strings.torrentserver_is_running))
             setContentTitle(stringResource(MR.strings.app_name))
             setAutoCancel(false)

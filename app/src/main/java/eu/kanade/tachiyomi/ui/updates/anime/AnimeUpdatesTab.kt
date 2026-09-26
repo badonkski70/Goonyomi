@@ -98,7 +98,6 @@ fun Screen.animeUpdatesTab(
                     UpdatesDeleteConfirmationDialog(
                         onDismissRequest = onDismissDialog,
                         onConfirm = { screenModel.deleteEpisodes(dialog.toDelete) },
-                        isManga = false,
                     )
                 }
                 is AnimeUpdatesScreenModel.Dialog.ShowQualities -> {

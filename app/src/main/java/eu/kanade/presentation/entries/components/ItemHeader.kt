@@ -25,7 +25,6 @@ fun ItemHeader(
     itemCount: Int?,
     missingItemsCount: Int,
     onClick: () -> Unit,
-    isManga: Boolean,
     modifier: Modifier = Modifier,
     fetchType: FetchType = FetchType.Episodes,
 ) {
@@ -41,17 +40,15 @@ fun ItemHeader(
     ) {
         Text(
             text = if (itemCount == null) {
-                val count = if (isManga) MR.strings.chapters else AYMR.strings.episodes
+                val count = AYMR.strings.episodes
                 stringResource(count)
             } else {
-                val pluralCount = if (isManga) {
-                    MR.plurals.manga_num_chapters
-                } else {
+                val pluralCount = 
                     when (fetchType) {
                         FetchType.Seasons -> AYMR.plurals.anime_num_seasons
                         FetchType.Episodes -> AYMR.plurals.anime_num_episodes
                     }
-                }
+                
                 pluralStringResource(pluralCount, count = itemCount, itemCount)
             },
             style = MaterialTheme.typography.titleMedium,

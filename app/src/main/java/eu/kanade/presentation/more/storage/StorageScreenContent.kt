@@ -27,7 +27,6 @@ import kotlin.random.Random
 @Composable
 fun StorageScreenContent(
     state: StorageScreenState,
-    isManga: Boolean,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues,
     onCategorySelected: (Category) -> Unit,
@@ -99,7 +98,6 @@ fun StorageScreenContent(
                                 itemContent = { index ->
                                     StorageItem(
                                         item = state.items[index],
-                                        isManga = isManga,
                                         onDelete = onDelete,
                                     )
                                     Spacer(Modifier.height(MaterialTheme.padding.medium))
@@ -147,7 +145,6 @@ private fun StorageScreenContentPreview() {
             categories = categories,
             selectedCategory = categories[0],
         ),
-        isManga = true,
         contentPadding = PaddingValues(0.dp),
         onCategorySelected = {},
         onDelete = {},
@@ -188,7 +185,6 @@ private fun StorageTabletUiScreenContentPreview() {
             categories = categories,
             selectedCategory = categories[0],
         ),
-        isManga = true,
         contentPadding = PaddingValues(0.dp),
         onCategorySelected = {},
         onDelete = {},

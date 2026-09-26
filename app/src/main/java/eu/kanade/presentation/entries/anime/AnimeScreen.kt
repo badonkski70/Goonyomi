@@ -414,7 +414,6 @@ private fun AnimeScreenSmallImpl(
                     onInvertSelection = { onInvertSelection() },
                     titleAlphaProvider = { titleAlpha },
                     backgroundAlphaProvider = { backgroundAlpha },
-                    isManga = false,
                     modifier = Modifier.onSizeChanged { toolbarHeight = it.height },
                 )
             },
@@ -566,7 +565,6 @@ private fun AnimeScreenSmallImpl(
                                 0
                             },
                             onClick = onFilterClicked,
-                            isManga = false,
                             fetchType = state.anime.fetchType,
                             modifier = Modifier.ignorePadding(offsetGridPaddingPx),
                         )
@@ -767,7 +765,6 @@ fun AnimeScreenLargeImpl(
                     onInvertSelection = { onInvertSelection() },
                     titleAlphaProvider = { 1f },
                     backgroundAlphaProvider = { 1f },
-                    isManga = false,
                 )
             },
             bottomBar = {
@@ -910,7 +907,6 @@ missingItemsCount = if (state.anime.showMissingCount()) {
                                 0
                             },
                             onClick = onFilterButtonClicked,
-                                    isManga = false,
                                     fetchType = state.anime.fetchType,
                                     modifier = Modifier.ignorePadding(offsetGridPaddingPx),
                                 )
@@ -1036,7 +1032,6 @@ private fun SharedAnimeBottomActionMenu(
         onInternalClicked = {
             onEpisodeClicked(selected.fastMap { it.episode }.first(), true)
         }.takeIf { alwaysUseExternalPlayer && selected.size == 1 },
-        isManga = false,
     )
 }
 

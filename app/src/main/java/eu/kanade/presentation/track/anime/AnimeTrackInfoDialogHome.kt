@@ -4,6 +4,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -42,8 +44,6 @@ import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.track.components.TrackLogoIcon
-import eu.kanade.presentation.track.manga.TrackDetailsItem
-import eu.kanade.presentation.track.manga.TrackInfoItemMenu
 import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
@@ -52,6 +52,26 @@ import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.layout.fillMaxHeight
+
+import androidx.compose.foundation.layout.wrapContentSize
+
+
+import androidx.compose.material.icons.filled.MoreVert
+
+import androidx.compose.material3.DropdownMenu
+
+import androidx.compose.material3.DropdownMenuItem
+
+
+import androidx.compose.material3.IconButton
+
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+
+
+import androidx.compose.runtime.setValue
+
 
 @Composable
 fun AnimeTrackInfoDialogHome(
@@ -293,4 +313,95 @@ private fun TrackInfoDialogHomePreviews(
     content: @Composable () -> Unit,
 ) {
     TachiyomiPreviewTheme { content() }
+}
+
+private const val UNSET_TEXT_ALPHA = 0.5F
+
+@Composable
+fun TrackDetailsItem(
+    text: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String = "",
+) {
+    Box(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .fillMaxHeight()
+            .padding(12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text ?: placeholder,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (text == null) UNSET_TEXT_ALPHA else 1f),
+        )
+    }
+}
+
+@Composable
+fun TrackInfoItemMenu(
+    onOpenInBrowser: () -> Unit,
+    onRemoved: () -> Unit,
+    onCopyLink: () -> Unit,
+    private: Boolean,
+    onTogglePrivate: (() -> Unit)?,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = stringResource(MR.strings.label_more),
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(MR.strings.action_open_in_browser)) },
+                onClick = {
+                    onOpenInBrowser()
+                    expanded = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(MR.strings.action_copy_link)) },
+                onClick = {
+                    onCopyLink()
+                    expanded = false
+                },
+            )
+            if (onTogglePrivate != null) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            stringResource(
+                                if (private) {
+                                    MR.strings.action_toggle_private_off
+                                } else {
+                                    MR.strings.action_toggle_private_on
+                                },
+                            ),
+                        )
+                    },
+                    onClick = {
+                        onTogglePrivate()
+                        expanded = false
+                    },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text(stringResource(MR.strings.action_remove)) },
+                onClick = {
+                    onRemoved()
+                    expanded = false
+                },
+            )
+        }
+    }
 }

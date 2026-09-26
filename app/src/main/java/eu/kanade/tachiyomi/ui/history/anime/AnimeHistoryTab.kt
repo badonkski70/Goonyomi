@@ -103,7 +103,6 @@ fun Screen.animeHistoryTab(
                                 screenModel.removeFromHistory(dialog.history)
                             }
                         },
-                        isManga = false,
                     )
                 }
                 is AnimeHistoryScreenModel.Dialog.DeleteAll -> {

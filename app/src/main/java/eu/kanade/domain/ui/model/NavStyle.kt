@@ -12,7 +12,6 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.history.HistoriesTab
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
-import eu.kanade.tachiyomi.ui.library.manga.MangaLibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import tachiyomi.i18n.MR
@@ -20,12 +19,11 @@ import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.stringResource
 
 object NavStyle {
-    const val TAB_ORDER_DEFAULT = "anime,manga,updates,history,browse"
+    const val TAB_ORDER_DEFAULT = "anime,updates,history,browse"
 
     val mainTabs: List<Tab> =
         listOf(
             AnimeLibraryTab,
-            MangaLibraryTab,
             UpdatesTab,
             HistoriesTab,
             BrowseTab,
@@ -34,7 +32,6 @@ object NavStyle {
     val tabKey: Map<Tab, String> =
         mapOf(
             AnimeLibraryTab to "anime",
-            MangaLibraryTab to "manga",
             UpdatesTab to "updates",
             HistoriesTab to "history",
             BrowseTab to "browse",
@@ -54,7 +51,6 @@ object NavStyle {
     fun tabsConfig(
         order: List<String>,
         showAnime: Boolean,
-        showManga: Boolean,
         showUpdates: Boolean,
         showHistory: Boolean,
         showBrowse: Boolean,
@@ -62,7 +58,6 @@ object NavStyle {
         val visibility =
             mapOf(
                 AnimeLibraryTab to showAnime,
-                MangaLibraryTab to showManga,
                 UpdatesTab to showUpdates,
                 HistoriesTab to showHistory,
                 BrowseTab to showBrowse,
@@ -78,7 +73,6 @@ object NavStyle {
     fun tabTitle(tab: Tab): String =
         when (tab) {
             AnimeLibraryTab -> stringResource(AYMR.strings.label_anime_library)
-            MangaLibraryTab -> stringResource(AYMR.strings.label_manga_library)
             UpdatesTab -> stringResource(MR.strings.label_recent_updates)
             HistoriesTab -> stringResource(MR.strings.history)
             BrowseTab -> stringResource(MR.strings.browse)
@@ -89,7 +83,6 @@ object NavStyle {
     fun moreTabIcon(tab: Tab): ImageVector =
         when (tab) {
             AnimeLibraryTab -> ImageVector.vectorResource(id = R.drawable.ic_animelibrary_outline_24dp)
-            MangaLibraryTab -> Icons.Outlined.CollectionsBookmark
             UpdatesTab -> ImageVector.vectorResource(id = R.drawable.ic_updates_outline_24dp)
             HistoriesTab -> Icons.Outlined.History
             BrowseTab -> Icons.Outlined.Explore

@@ -157,7 +157,6 @@ private fun AnimeUpdatesBottomBar(
         onInternalClicked = {
             onOpenEpisode(selected[0], true)
         }.takeIf { playerPreferences.alwaysUseExternalPlayer().get() && selected.size == 1 },
-        isManga = false,
     )
 }
 

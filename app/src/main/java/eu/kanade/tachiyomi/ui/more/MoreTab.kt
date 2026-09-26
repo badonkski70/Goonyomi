@@ -24,7 +24,6 @@ import eu.kanade.presentation.more.MoreScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.data.download.manga.MangaDownloadManager
 import eu.kanade.tachiyomi.ui.category.CategoriesTab
 import eu.kanade.tachiyomi.ui.download.DownloadsTab
 import eu.kanade.tachiyomi.ui.setting.PlayerSettingsScreen
@@ -68,7 +67,6 @@ data object MoreTab : Tab {
         val downloadQueueState by screenModel.downloadQueueState.collectAsState()
         val uiPreferences = Injekt.get<UiPreferences>()
         val showAnime by uiPreferences.showAnimeTab().collectAsState()
-        val showManga by uiPreferences.showMangaLibraryTab().collectAsState()
         val showUpdates by uiPreferences.showUpdatesTab().collectAsState()
         val showHistory by uiPreferences.showHistoryTab().collectAsState()
         val showBrowse by uiPreferences.showBrowseTab().collectAsState()
@@ -77,8 +75,7 @@ data object MoreTab : Tab {
             NavStyle.tabsConfig(
                 order = NavStyle.parseOrder(orderRaw),
                 showAnime = showAnime,
-                showManga = showManga,
-                showUpdates = showUpdates,
+                    showUpdates = showUpdates,
                 showHistory = showHistory,
                 showBrowse = showBrowse,
             )
@@ -103,7 +100,6 @@ data object MoreTab : Tab {
 }
 
 private class MoreScreenModel(
-    private val downloadManager: MangaDownloadManager = Injekt.get(),
     private val animeDownloadManager: AnimeDownloadManager = Injekt.get(),
     preferences: BasePreferences = Injekt.get(),
 ) : ScreenModel {
@@ -120,30 +116,24 @@ private class MoreScreenModel(
         // Handle running/paused status change and queue progress updating
         screenModelScope.launchIO {
             combine(
-                downloadManager.isDownloaderRunning,
-                downloadManager.queueState,
-            ) { isRunningManga, mangaDownloadQueue -> Pair(isRunningManga, mangaDownloadQueue.size) }
-                .collectLatest { (isDownloadingManga, mangaDownloadQueueSize) ->
-                    combine(
-                        animeDownloadManager.isDownloaderRunning,
-                        animeDownloadManager.queueState,
-                    ) { isRunningAnime, animeDownloadQueue ->
-                        Pair(
-                            isRunningAnime,
-                            animeDownloadQueue.size,
-                        )
-                    }.collectLatest { (isDownloadingAnime, animeDownloadQueueSize) ->
-                        val isDownloading = isDownloadingAnime || isDownloadingManga
-                        val downloadQueueSize = mangaDownloadQueueSize + animeDownloadQueueSize
-                        val pendingDownloadExists = downloadQueueSize != 0
-                        _downloadQueueState.value =
-                            when {
-                                !pendingDownloadExists -> DownloadQueueState.Stopped
-                                !isDownloading -> DownloadQueueState.Paused(downloadQueueSize)
-                                else -> DownloadQueueState.Downloading(downloadQueueSize)
-                            }
+                animeDownloadManager.isDownloaderRunning,
+                animeDownloadManager.queueState,
+            ) { isRunningAnime, animeDownloadQueue ->
+                Pair(
+                    isRunningAnime,
+                    animeDownloadQueue.size,
+                )
+            }.collectLatest { (isDownloadingAnime, animeDownloadQueueSize) ->
+                val isDownloading = isDownloadingAnime
+                val downloadQueueSize = animeDownloadQueueSize
+                val pendingDownloadExists = downloadQueueSize != 0
+                _downloadQueueState.value =
+                    when {
+                        !pendingDownloadExists -> DownloadQueueState.Stopped
+                        !isDownloading -> DownloadQueueState.Paused(downloadQueueSize)
+                        else -> DownloadQueueState.Downloading(downloadQueueSize)
                     }
-                }
+            }
         }
     }
 }

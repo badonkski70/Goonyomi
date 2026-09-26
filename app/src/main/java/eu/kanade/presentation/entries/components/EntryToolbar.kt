@@ -48,7 +48,6 @@ fun EntryToolbar(
     onInvertSelection: () -> Unit,
     titleAlphaProvider: () -> Float,
     backgroundAlphaProvider: () -> Float,
-    isManga: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val isActionMode = actionModeCounter > 0
@@ -73,7 +72,6 @@ fun EntryToolbar(
                     expanded = downloadExpanded,
                     onDismissRequest = onDismissRequest,
                     onDownloadClicked = onClickDownload,
-                    isManga = isManga,
                 )
             }
 

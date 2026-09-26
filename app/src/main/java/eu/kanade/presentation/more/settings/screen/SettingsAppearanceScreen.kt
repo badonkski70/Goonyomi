@@ -152,11 +152,6 @@ object SettingsAppearanceScreen : SearchableSettings {
                         subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
-                        preference = uiPreferences.showMangaLibraryTab(),
-                        title = stringResource(AYMR.strings.pref_bottom_nav_show_manga),
-                        subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
-                    ),
-                    Preference.PreferenceItem.SwitchPreference(
                         preference = uiPreferences.showUpdatesTab(),
                         title = stringResource(AYMR.strings.pref_bottom_nav_show_updates),
                         subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),

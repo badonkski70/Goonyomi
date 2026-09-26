@@ -36,7 +36,6 @@ class StorageManager(
                 baseDir = getBaseDir(uri)
                 baseDir?.let { parent ->
                     parent.createDirectory(AUTOMATIC_BACKUPS_PATH)
-                    parent.createDirectory(LOCAL_SOURCE_PATH)
                     parent.createDirectory(LOCAL_ANIMESOURCE_PATH)
                     parent.createDirectory(DOWNLOADS_PATH).also {
                         DiskUtil.createNoMediaFile(it, context)
@@ -66,10 +65,6 @@ class StorageManager(
         return baseDir?.createDirectory(DOWNLOADS_PATH)
     }
 
-    fun getLocalMangaSourceDirectory(): UniFile? {
-        return baseDir?.createDirectory(LOCAL_SOURCE_PATH)
-    }
-
     fun getLocalAnimeSourceDirectory(): UniFile? {
         return baseDir?.createDirectory(LOCAL_ANIMESOURCE_PATH)
     }
@@ -97,7 +92,6 @@ class StorageManager(
 
 private const val AUTOMATIC_BACKUPS_PATH = "autobackup"
 private const val DOWNLOADS_PATH = "downloads"
-private const val LOCAL_SOURCE_PATH = "local"
 private const val LOCAL_ANIMESOURCE_PATH = "localanime"
 private const val MPV_CONFIG_PATH = "mpv-config"
 private const val FONTS_PATH = "fonts"

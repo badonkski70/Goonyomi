@@ -60,13 +60,11 @@ import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.source.anime.interactor.GetAnimeIncognitoState
-import eu.kanade.domain.source.manga.interactor.GetMangaIncognitoState
 import eu.kanade.presentation.components.AppStateBanners
 import eu.kanade.presentation.components.DownloadedOnlyBannerBackgroundColor
 import eu.kanade.presentation.components.IncognitoModeBannerBackgroundColor
 import eu.kanade.presentation.components.IndexingBannerBackgroundColor
 import eu.kanade.presentation.more.settings.screen.browse.AnimeExtensionStoresScreen
-import eu.kanade.presentation.more.settings.screen.browse.MangaExtensionReposScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
@@ -74,25 +72,18 @@ import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.core.common.Constants
-import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
-import eu.kanade.tachiyomi.data.download.manga.MangaDownloadCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.player.service.HttpServerService
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
 import eu.kanade.tachiyomi.extension.anime.api.AnimeExtensionApi
-import eu.kanade.tachiyomi.extension.manga.api.MangaExtensionApi
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.browse.manga.source.browse.BrowseMangaSourceScreen
-import eu.kanade.tachiyomi.ui.browse.manga.source.globalsearch.GlobalMangaSearchScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreenType
 import eu.kanade.tachiyomi.ui.deeplink.anime.DeepLinkAnimeScreen
-import eu.kanade.tachiyomi.ui.deeplink.manga.DeepLinkMangaScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
-import eu.kanade.tachiyomi.ui.entries.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
@@ -140,11 +131,8 @@ class MainActivity : BaseActivity() {
     private val preferences: BasePreferences by injectLazy()
 
     private val animeDownloadCache: AnimeDownloadCache by injectLazy()
-    private val downloadCache: MangaDownloadCache by injectLazy()
-    private val chapterCache: ChapterCache by injectLazy()
 
     private val getAnimeIncognitoState: GetAnimeIncognitoState by injectLazy()
-    private val getMangaIncognitoState: GetMangaIncognitoState by injectLazy()
 
     // To be checked by splash screen. If true then splash screen will be removed.
     var ready = false
@@ -174,17 +162,15 @@ class MainActivity : BaseActivity() {
         setComposeContent {
             val context = LocalContext.current
 
-            var incognito by remember { mutableStateOf(getMangaIncognitoState.await(null)) }
             var incognitoAnime by remember { mutableStateOf(getAnimeIncognitoState.await(null)) }
             val downloadOnly by preferences.downloadedOnly().collectAsState()
-            val indexing by downloadCache.isInitializing.collectAsState()
             val indexingAnime by animeDownloadCache.isInitializing.collectAsState()
 
             val isSystemInDarkTheme = isSystemInDarkTheme()
             val statusBarBackgroundColor = when {
-                indexing || indexingAnime -> IndexingBannerBackgroundColor
+    indexingAnime -> IndexingBannerBackgroundColor
                 downloadOnly -> DownloadedOnlyBannerBackgroundColor
-                incognito || incognitoAnime -> IncognitoModeBannerBackgroundColor
+                incognitoAnime -> IncognitoModeBannerBackgroundColor
                 else -> MaterialTheme.colorScheme.surface
             }
             LaunchedEffect(isSystemInDarkTheme, statusBarBackgroundColor) {
@@ -217,12 +203,6 @@ class MainActivity : BaseActivity() {
                     }
                 }
                 LaunchedEffect(navigator.lastItem) {
-                    (navigator.lastItem as? BrowseMangaSourceScreen)?.sourceId
-                        .let(getMangaIncognitoState::subscribe)
-                        .collectLatest { incognito = it }
-                }
-
-                LaunchedEffect(navigator.lastItem) {
                     (navigator.lastItem as? BrowseAnimeSourceScreen)?.sourceId
                         .let(getAnimeIncognitoState::subscribe)
                         .collectLatest { incognitoAnime = it }
@@ -233,8 +213,8 @@ class MainActivity : BaseActivity() {
                     topBar = {
                         AppStateBanners(
                             downloadedOnlyMode = downloadOnly,
-                            incognitoMode = incognito || incognitoAnime,
-                            indexing = indexing || indexingAnime,
+                            incognitoMode = incognitoAnime,
+                            indexing = indexingAnime,
                             modifier = Modifier.windowInsetsPadding(scaffoldInsets),
                         )
                     },
@@ -270,14 +250,9 @@ class MainActivity : BaseActivity() {
                         .filter { !it }
                         .onEach {
                             val currentScreen = navigator.lastItem
-                            if ((
-                                    currentScreen is BrowseMangaSourceScreen ||
-                                        (currentScreen is MangaScreen && currentScreen.fromSource)
-                                    ) ||
-                                (
-                                    currentScreen is BrowseAnimeSourceScreen ||
-                                        (currentScreen is AnimeScreen && currentScreen.fromSource)
-                                    )
+                            if (
+                                currentScreen is BrowseAnimeSourceScreen ||
+                                    (currentScreen is AnimeScreen && currentScreen.fromSource)
                             ) {
                                 navigator.popUntilRoot()
                             }
@@ -320,12 +295,6 @@ class MainActivity : BaseActivity() {
             elapsed <= SPLASH_MIN_DURATION || !ready && elapsed <= SPLASH_MAX_DURATION
         }
         setSplashScreenExitAnimation(splashScreen)
-
-        if (isLaunch && libraryPreferences.autoClearItemCache().get()) {
-            lifecycleScope.launchIO {
-                chapterCache.clear()
-            }
-        }
 
         externalPlayerResult = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult(),
@@ -396,7 +365,6 @@ class MainActivity : BaseActivity() {
         LaunchedEffect(Unit) {
             try {
                 AnimeExtensionApi().checkForUpdates(context)
-                MangaExtensionApi().checkForUpdates(context)
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e)
             }
@@ -470,12 +438,6 @@ class MainActivity : BaseActivity() {
 
         val tabToOpen = when (intent.action) {
             Constants.SHORTCUT_ANIMELIB -> HomeScreen.Tab.AnimeLib()
-            Constants.SHORTCUT_LIBRARY -> HomeScreen.Tab.Library()
-            Constants.SHORTCUT_MANGA -> {
-                val idToOpen = intent.extras?.getLong(Constants.MANGA_EXTRA) ?: return false
-                navigator.popUntilRoot()
-                HomeScreen.Tab.Library(idToOpen)
-            }
             Constants.SHORTCUT_ANIME -> {
                 val idToOpen = intent.extras?.getLong(Constants.ANIME_EXTRA) ?: return false
                 navigator.popUntilRoot()
@@ -484,7 +446,7 @@ class MainActivity : BaseActivity() {
             Constants.SHORTCUT_UPDATES -> HomeScreen.Tab.Updates
             Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.History
             Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(false)
-            Constants.SHORTCUT_ANIMEEXTENSIONS -> HomeScreen.Tab.Browse(true, true)
+            Constants.SHORTCUT_ANIMEEXTENSIONS -> HomeScreen.Tab.Browse(true)
             Constants.SHORTCUT_EXTENSIONS -> HomeScreen.Tab.Browse(true)
             Constants.SHORTCUT_DOWNLOADS -> {
                 navigator.popUntilRoot()
@@ -510,24 +472,12 @@ class MainActivity : BaseActivity() {
                         .let(DeepLinkScreenType::valueOf)
 
                     when (screenType) {
-                        DeepLinkScreenType.MANGA -> {
-                            navigator.push(GlobalMangaSearchScreen(query))
-                            navigator.push(DeepLinkMangaScreen(query))
-                        }
                         DeepLinkScreenType.ANIME -> {
                             navigator.push(GlobalAnimeSearchScreen(query))
                             navigator.push(DeepLinkAnimeScreen(query))
                         }
+                        else -> Unit
                     }
-                }
-                null
-            }
-            INTENT_SEARCH -> { // Used by extensions (url intent handlers)
-                val query = intent.getStringExtra(INTENT_SEARCH_QUERY)
-                if (!query.isNullOrEmpty()) {
-                    val filter = intent.getStringExtra(INTENT_SEARCH_FILTER)
-                    navigator.popUntilRoot()
-                    navigator.push(GlobalMangaSearchScreen(query, filter))
                 }
                 null
             }
@@ -551,12 +501,6 @@ class MainActivity : BaseActivity() {
                     intent.data?.getQueryParameter("url")?.let { repoUrl ->
                         navigator.popUntilRoot()
                         navigator.push(AnimeExtensionStoresScreen(repoUrl))
-                    }
-                } // Deep link to add extension repo
-                else if (intent.scheme == "tachiyomi" && intent.data?.host == "add-repo") {
-                    intent.data?.getQueryParameter("url")?.let { repoUrl ->
-                        navigator.popUntilRoot()
-                        navigator.push(MangaExtensionReposScreen(repoUrl))
                     }
                 }
                 null

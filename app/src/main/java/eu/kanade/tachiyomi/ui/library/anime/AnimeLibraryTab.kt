@@ -171,7 +171,6 @@ data object AnimeLibraryTab : Tab {
                     onDownloadClicked = screenModel::runDownloadActionSelection
                         .takeIf { state.selection.fastAll { !it.anime.isLocal() } },
                     onDeleteClicked = screenModel::openDeleteAnimeDialog,
-                    isManga = false,
                 )
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -269,7 +268,6 @@ data object AnimeLibraryTab : Tab {
                         screenModel.removeAnimes(dialog.anime, deleteAnime, deleteEpisode)
                         screenModel.clearSelection()
                     },
-                    isManga = false,
                 )
             }
             null -> {}

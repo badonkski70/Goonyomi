@@ -22,7 +22,7 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloader
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.source.UnmeteredSource
+import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.lang.chop
 import eu.kanade.tachiyomi.util.system.cancelNotification
@@ -177,7 +177,7 @@ class AnimeLibraryUpdateNotifier(
         ) {
             setContentTitle(context.stringResource(MR.strings.notification_update_error, failed))
             setContentText(context.stringResource(MR.strings.action_show_errors))
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(R.drawable.ic_goonyomi_emoji)
 
             setContentIntent(NotificationReceiver.openErrorLogPendingActivity(context, uri))
         }
@@ -217,7 +217,7 @@ class AnimeLibraryUpdateNotifier(
                 }
             }
 
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(R.drawable.ic_goonyomi_emoji)
             setLargeIcon(notificationBitmap)
 
             setGroup(Notifications.GROUP_NEW_EPISODES)
@@ -253,7 +253,7 @@ class AnimeLibraryUpdateNotifier(
             setContentText(description)
             setStyle(NotificationCompat.BigTextStyle().bigText(description))
 
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(R.drawable.ic_goonyomi_emoji)
 
             if (icon != null) {
                 setLargeIcon(icon)

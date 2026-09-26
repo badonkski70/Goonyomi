@@ -16,17 +16,6 @@ class ResetSortPreferenceRemovedMigration : Migration {
         val libraryPreferences = migrationContext.get<LibraryPreferences>() ?: return false
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
-        val oldMangaSortingMode = prefs.getInt(
-            libraryPreferences.mangaSortingMode().key(),
-            0,
-        )
-
-        if (oldMangaSortingMode == 5) { // SOURCE = 5
-            prefs.edit {
-                putInt(libraryPreferences.mangaSortingMode().key(), 0) // ALPHABETICAL = 0
-            }
-        }
-
         val oldAnimeSortingMode = prefs.getInt(
             libraryPreferences.animeSortingMode().key(),
             0,

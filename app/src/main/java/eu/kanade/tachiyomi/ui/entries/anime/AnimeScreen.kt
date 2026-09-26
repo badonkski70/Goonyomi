@@ -264,7 +264,6 @@ class AnimeScreen(
                         screenModel.toggleAllSelection(false)
                         screenModel.deleteEpisodes(dialog.episodes)
                     },
-                    isManga = false,
                 )
             }
 
@@ -375,7 +374,6 @@ class AnimeScreen(
                     interval = dialog.anime.fetchInterval,
                     nextUpdate = dialog.anime.expectedNextUpdate,
                     onDismissRequest = onDismissRequest,
-                    isManga = false,
                     onValueChanged =
                         { interval: Int -> screenModel.setFetchInterval(dialog.anime, interval) }
                             .takeIf { screenModel.isUpdateIntervalEnabled },

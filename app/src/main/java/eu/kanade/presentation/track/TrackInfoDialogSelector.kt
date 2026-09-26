@@ -100,9 +100,8 @@ fun TrackItemSelector(
     range: Iterable<Int>,
     onConfirm: () -> Unit,
     onDismissRequest: () -> Unit,
-    isManga: Boolean,
 ) {
-    val titleText = if (isManga) MR.strings.chapters else AYMR.strings.episodes
+    val titleText = AYMR.strings.episodes
     BaseSelector(
         title = stringResource(titleText),
         content = {

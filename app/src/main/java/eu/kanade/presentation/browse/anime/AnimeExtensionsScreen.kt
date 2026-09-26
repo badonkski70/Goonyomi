@@ -28,7 +28,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import tachiyomi.presentation.core.theme.header
 import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import dev.icerock.moko.resources.StringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.Placeholder
@@ -47,8 +51,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.browse.BaseBrowseItem
 import eu.kanade.presentation.browse.anime.components.AnimeExtensionIcon
-import eu.kanade.presentation.browse.manga.ExtensionHeader
-import eu.kanade.presentation.browse.manga.ExtensionTrustDialog
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.entries.components.DotSeparatorNoSpaceText
 import eu.kanade.presentation.more.settings.screen.browse.AnimeExtensionStoresScreen
@@ -74,6 +76,12 @@ import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.presentation.core.util.secondaryItemAlpha
+
+
+
+
+
+
 
 @Composable
 fun AnimeExtensionScreen(
@@ -514,3 +522,64 @@ private fun AnimeExtensionItemActions(
 }
 
 private const val TORRENT_ICON = "torrentIcon"
+
+@Composable
+fun ExtensionHeader(
+    textRes: StringResource,
+    modifier: Modifier = Modifier,
+    action: @Composable RowScope.() -> Unit = {},
+) {
+    ExtensionHeader(
+        text = stringResource(textRes),
+        modifier = modifier,
+        action = action,
+    )
+}
+
+@Composable
+fun ExtensionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+    action: @Composable RowScope.() -> Unit = {},
+) {
+    Row(
+        modifier = modifier.padding(horizontal = MaterialTheme.padding.medium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .weight(1f),
+            style = MaterialTheme.typography.header,
+        )
+        action()
+    }
+}
+
+@Composable
+fun ExtensionTrustDialog(
+    onClickConfirm: () -> Unit,
+    onClickDismiss: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    AlertDialog(
+        title = {
+            Text(text = stringResource(MR.strings.untrusted_extension))
+        },
+        text = {
+            Text(text = stringResource(MR.strings.untrusted_extension_message))
+        },
+        confirmButton = {
+            TextButton(onClick = onClickConfirm) {
+                Text(text = stringResource(MR.strings.ext_trust))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onClickDismiss) {
+                Text(text = stringResource(MR.strings.ext_uninstall))
+            }
+        },
+        onDismissRequest = onDismissRequest,
+    )
+}

@@ -71,7 +71,6 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun EntryBottomActionMenu(
     visible: Boolean,
-    isManga: Boolean,
     modifier: Modifier = Modifier,
     onBookmarkClicked: (() -> Unit)? = null,
     onRemoveBookmarkClicked: (() -> Unit)? = null,
@@ -126,7 +125,7 @@ fun EntryBottomActionMenu(
                     .padding(horizontal = 8.dp, vertical = 12.dp),
             ) {
                 if (onBookmarkClicked != null) {
-                    val bookmark = if (isManga) MR.strings.action_bookmark else AYMR.strings.action_bookmark_episode
+                    val bookmark = AYMR.strings.action_bookmark_episode
                     Button(
                         title = stringResource(bookmark),
                         icon = Icons.Outlined.BookmarkAdd,
@@ -136,11 +135,9 @@ fun EntryBottomActionMenu(
                     )
                 }
                 if (onRemoveBookmarkClicked != null) {
-                    val removeBookmark = if (isManga) {
-                        MR.strings.action_remove_bookmark
-                    } else {
+                    val removeBookmark = 
                         AYMR.strings.action_remove_bookmark_episode
-                    }
+                    
                     Button(
                         title = stringResource(removeBookmark),
                         icon = Icons.Outlined.BookmarkRemove,
@@ -168,7 +165,7 @@ fun EntryBottomActionMenu(
                     )
                 }
                 if (onMarkAsViewedClicked != null) {
-                    val viewed = if (isManga) MR.strings.action_mark_as_read else AYMR.strings.action_mark_as_seen
+                    val viewed = AYMR.strings.action_mark_as_seen
                     Button(
                         title = stringResource(viewed),
                         icon = Icons.Outlined.DoneAll,
@@ -178,7 +175,7 @@ fun EntryBottomActionMenu(
                     )
                 }
                 if (onMarkAsUnviewedClicked != null) {
-                    val unviewed = if (isManga) MR.strings.action_mark_as_unread else AYMR.strings.action_mark_as_unseen
+                    val unviewed = AYMR.strings.action_mark_as_unseen
                     Button(
                         title = stringResource(unviewed),
                         icon = Icons.Outlined.RemoveDone,
@@ -188,11 +185,9 @@ fun EntryBottomActionMenu(
                     )
                 }
                 if (onMarkPreviousAsViewedClicked != null) {
-                    val previousUnviewed = if (isManga) {
-                        MR.strings.action_mark_previous_as_read
-                    } else {
+                    val previousUnviewed = 
                         AYMR.strings.action_mark_previous_as_seen
-                    }
+                    
                     Button(
                         title = stringResource(previousUnviewed),
                         icon = ImageVector.vectorResource(R.drawable.ic_done_prev_24dp),
@@ -219,7 +214,7 @@ fun EntryBottomActionMenu(
                         onClick = onDeleteClicked,
                     )
                 }
-                if (!isManga && onExternalClicked != null && !playerPreferences.alwaysUseExternalPlayer().get()) {
+                if (onExternalClicked != null && !playerPreferences.alwaysUseExternalPlayer().get()) {
                     Button(
                         title = stringResource(AYMR.strings.action_play_externally),
                         icon = Icons.Outlined.OpenInNew,
@@ -228,7 +223,7 @@ fun EntryBottomActionMenu(
                         onClick = onExternalClicked,
                     )
                 }
-                if (!isManga && onInternalClicked != null && playerPreferences.alwaysUseExternalPlayer().get()) {
+                if (onInternalClicked != null && playerPreferences.alwaysUseExternalPlayer().get()) {
                     Button(
                         title = stringResource(AYMR.strings.action_play_internally),
                         icon = Icons.Outlined.Input,
@@ -296,7 +291,6 @@ fun LibraryBottomActionMenu(
     onMarkAsUnviewedClicked: () -> Unit,
     onDownloadClicked: ((DownloadAction) -> Unit)?,
     onDeleteClicked: () -> Unit,
-    isManga: Boolean,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
@@ -340,7 +334,7 @@ fun LibraryBottomActionMenu(
                     onLongClick = { onLongClickItem(0) },
                     onClick = onChangeCategoryClicked,
                 )
-                val viewed = if (isManga) MR.strings.action_mark_as_read else AYMR.strings.action_mark_as_seen
+                val viewed = AYMR.strings.action_mark_as_seen
                 Button(
                     title = stringResource(viewed),
                     icon = Icons.Outlined.DoneAll,
@@ -348,7 +342,7 @@ fun LibraryBottomActionMenu(
                     onLongClick = { onLongClickItem(1) },
                     onClick = onMarkAsViewedClicked,
                 )
-                val unviewed = if (isManga) MR.strings.action_mark_as_unread else AYMR.strings.action_mark_as_unseen
+                val unviewed = AYMR.strings.action_mark_as_unseen
                 Button(
                     title = stringResource(unviewed),
                     icon = Icons.Outlined.RemoveDone,
@@ -370,7 +364,6 @@ fun LibraryBottomActionMenu(
                             expanded = downloadExpanded,
                             onDismissRequest = onDismissRequest,
                             onDownloadClicked = onDownloadClicked,
-                            isManga = isManga,
                         )
                     }
                 }
