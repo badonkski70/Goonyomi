@@ -28,11 +28,15 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: true
-      - run: ./gradlew assembleRelease -Penable-updater
+      # Cheapest and most likely to fail first, so a bad push dies in seconds
+      # instead of after a multi-minute build.
+      # spotless: .editorconfig was missing for this repo's whole life, so
+      # nothing was enforcing the format and 47 files drifted.
+      - run: ./gradlew spotlessCheck
       # assembleRelease never compiles the test source set, so a refactor can
-      # leave broken tests behind and still look green. ~15s against an 11
-      # minute build.
+      # leave broken tests behind and still look green.
       - run: ./gradlew :domain:test
+      - run: ./gradlew assembleRelease -Penable-updater
 
       - name: Delete old releases
         env:
