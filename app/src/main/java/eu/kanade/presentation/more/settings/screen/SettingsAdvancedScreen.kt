@@ -334,7 +334,6 @@ object SettingsAdvancedScreen : SearchableSettings {
         )
     }
 
-
     @Composable
     private fun getReaderGroup(
         basePreferences: BasePreferences,

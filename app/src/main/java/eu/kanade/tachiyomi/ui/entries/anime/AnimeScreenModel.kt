@@ -474,10 +474,10 @@ class AnimeScreenModel(
             updateSuccessState { successState ->
                 successState.copy(
                     dialog =
-                        Dialog.ChangeCategory(
-                            anime = anime,
-                            initialSelection = categories.mapAsCheckboxState { it.id in selection }.toImmutableList(),
-                        ),
+                    Dialog.ChangeCategory(
+                        anime = anime,
+                        initialSelection = categories.mapAsCheckboxState { it.id in selection }.toImmutableList(),
+                    ),
                 )
             }
         }
@@ -775,7 +775,9 @@ class AnimeScreenModel(
         }
     }
 
-    suspend fun getNextUnseenEpisode(anime: Anime): Episode? = getEpisodesByAnimeId.await(anime.id).getNextUnseen(anime, downloadManager)
+    suspend fun getNextUnseenEpisode(anime: Anime): Episode? = getEpisodesByAnimeId.await(
+        anime.id,
+    ).getNextUnseen(anime, downloadManager)
 
     /**
      * Returns the next unseen episode or null if everything is seen.
@@ -929,7 +931,10 @@ class AnimeScreenModel(
 
             val result =
                 snackbarHostState.showSnackbar(
-                    message = context.stringResource(AYMR.strings.confirm_tracker_update_anime, maxEpisodeNumber.toInt()),
+                    message = context.stringResource(
+                        AYMR.strings.confirm_tracker_update_anime,
+                        maxEpisodeNumber.toInt(),
+                    ),
                     actionLabel = context.stringResource(MR.strings.action_ok),
                     duration = SnackbarDuration.Short,
                     withDismissAction = true,
@@ -1828,9 +1833,9 @@ class AnimeScreenModel(
                             isLocal = anime.seasonLocalOverlay && it.isLocal,
                             sourceLanguage = if (anime.seasonLangOverlay) it.sourceLanguage else "",
                             showContinueOverlay =
-                                anime.seasonContinueOverlay &&
-                                    it.unseenCount > 0 &&
-                                    itemAnime.fetchType == FetchType.Episodes,
+                            anime.seasonContinueOverlay &&
+                                it.unseenCount > 0 &&
+                                itemAnime.fetchType == FetchType.Episodes,
                         )
                     }
             }

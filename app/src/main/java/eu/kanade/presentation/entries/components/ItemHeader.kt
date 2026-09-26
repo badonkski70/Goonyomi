@@ -43,12 +43,12 @@ fun ItemHeader(
                 val count = AYMR.strings.episodes
                 stringResource(count)
             } else {
-                val pluralCount = 
+                val pluralCount =
                     when (fetchType) {
                         FetchType.Seasons -> AYMR.plurals.anime_num_seasons
                         FetchType.Episodes -> AYMR.plurals.anime_num_episodes
                     }
-                
+
                 pluralStringResource(pluralCount, count = itemCount, itemCount)
             },
             style = MaterialTheme.typography.titleMedium,

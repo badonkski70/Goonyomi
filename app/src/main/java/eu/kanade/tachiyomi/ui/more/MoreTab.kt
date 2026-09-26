@@ -75,7 +75,7 @@ data object MoreTab : Tab {
             NavStyle.tabsConfig(
                 order = NavStyle.parseOrder(orderRaw),
                 showAnime = showAnime,
-                    showUpdates = showUpdates,
+                showUpdates = showUpdates,
                 showHistory = showHistory,
                 showBrowse = showBrowse,
             )

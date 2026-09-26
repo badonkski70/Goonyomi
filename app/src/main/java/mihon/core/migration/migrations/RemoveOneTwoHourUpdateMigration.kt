@@ -17,7 +17,7 @@ class RemoveOneTwoHourUpdateMigration : Migration {
         val updateInterval = libraryPreferences.autoUpdateInterval().get()
         if (updateInterval == 1 || updateInterval == 2) {
             libraryPreferences.autoUpdateInterval().set(3)
-                AnimeLibraryUpdateJob.setupTask(context, 3)
+            AnimeLibraryUpdateJob.setupTask(context, 3)
         }
 
         return true

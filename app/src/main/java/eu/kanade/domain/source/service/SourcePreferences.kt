@@ -49,7 +49,6 @@ class SourcePreferences(
         false,
     )
 
-
     fun disabledAnimeSources() = preferenceStore.getStringSet("hidden_anime_catalogues", emptySet())
 
     fun incognitoAnimeExtensions() = preferenceStore.getStringSet("incognito_anime_extensions", emptySet())

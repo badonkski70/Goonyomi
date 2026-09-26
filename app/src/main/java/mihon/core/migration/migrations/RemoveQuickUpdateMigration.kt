@@ -17,7 +17,7 @@ class RemoveQuickUpdateMigration : Migration {
         val updateInterval = libraryPreferences.autoUpdateInterval().get()
         if (updateInterval in listOf(3, 4, 6, 8)) {
             libraryPreferences.autoUpdateInterval().set(12)
-                AnimeLibraryUpdateJob.setupTask(context, 12)
+            AnimeLibraryUpdateJob.setupTask(context, 12)
         }
 
         return true

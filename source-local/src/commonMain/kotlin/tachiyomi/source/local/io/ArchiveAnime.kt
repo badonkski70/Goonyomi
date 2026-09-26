@@ -11,5 +11,3 @@ object ArchiveAnime {
         return file.extension in SUPPORTED_ARCHIVE_TYPES
     }
 }
-
-

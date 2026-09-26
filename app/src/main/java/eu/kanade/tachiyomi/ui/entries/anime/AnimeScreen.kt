@@ -143,37 +143,37 @@ class AnimeScreen(
                 }
             },
             onDownloadEpisode =
-                screenModel::runEpisodeDownloadActions.takeIf {
-                    !successState.source.isLocalOrStub() && successState.anime.fetchType == FetchType.Episodes
-                },
+            screenModel::runEpisodeDownloadActions.takeIf {
+                !successState.source.isLocalOrStub() && successState.anime.fetchType == FetchType.Episodes
+            },
             onAddToLibraryClicked = {
                 screenModel.toggleFavorite()
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             },
             onWebViewClicked =
-                {
-                    openAnimeInWebView(
-                        navigator,
-                        screenModel.anime,
-                        screenModel.source,
-                    )
-                }.takeIf { isAnimeHttpSource },
+            {
+                openAnimeInWebView(
+                    navigator,
+                    screenModel.anime,
+                    screenModel.source,
+                )
+            }.takeIf { isAnimeHttpSource },
             onWebViewLongClicked =
-                {
-                    copyAnimeUrl(
-                        context,
-                        screenModel.anime,
-                        screenModel.source,
-                    )
-                }.takeIf { isAnimeHttpSource },
+            {
+                copyAnimeUrl(
+                    context,
+                    screenModel.anime,
+                    screenModel.source,
+                )
+            }.takeIf { isAnimeHttpSource },
             onTrackingClicked =
-                {
-                    if (!successState.hasLoggedInTrackers) {
-                        navigator.push(SettingsScreen(SettingsScreen.Destination.Tracking))
-                    } else {
-                        screenModel.showTrackDialog()
-                    }
-                }.takeIf { successState.anime.fetchType == FetchType.Episodes },
+            {
+                if (!successState.hasLoggedInTrackers) {
+                    navigator.push(SettingsScreen(SettingsScreen.Destination.Tracking))
+                } else {
+                    screenModel.showTrackDialog()
+                }
+            }.takeIf { successState.anime.fetchType == FetchType.Episodes },
             onTagSearch = { scope.launch { performGenreSearch(navigator, it, screenModel.source!!) } },
             onFilterButtonClicked = screenModel::showSettingsDialog,
             onRefresh = screenModel::fetchAllFromSource,
@@ -186,29 +186,29 @@ class AnimeScreen(
             onSearch = { query, global -> scope.launch { performSearch(navigator, query, global) } },
             onCoverClicked = screenModel::showImagesDialog,
             onShareClicked =
-                {
-                    shareAnime(
-                        context,
-                        screenModel.anime,
-                        screenModel.source,
-                    )
-                }.takeIf { isAnimeHttpSource },
+            {
+                shareAnime(
+                    context,
+                    screenModel.anime,
+                    screenModel.source,
+                )
+            }.takeIf { isAnimeHttpSource },
             onDownloadActionClicked =
-                screenModel::runDownloadAction.takeIf {
-                    !successState.source.isLocalOrStub() && successState.anime.fetchType == FetchType.Episodes
-                },
+            screenModel::runDownloadAction.takeIf {
+                !successState.source.isLocalOrStub() && successState.anime.fetchType == FetchType.Episodes
+            },
             onEditCategoryClicked = screenModel::showChangeCategoryDialog.takeIf { successState.anime.favorite },
             onEditFetchIntervalClicked =
-                screenModel::showSetAnimeFetchIntervalDialog.takeIf {
-                    successState.anime.favorite
-                },
+            screenModel::showSetAnimeFetchIntervalDialog.takeIf {
+                successState.anime.favorite
+            },
             onMigrateClicked =
-                {
-                    navigator.push(MigrateAnimeSearchScreen(successState.anime.id))
-                }.takeIf { successState.anime.favorite },
+            {
+                navigator.push(MigrateAnimeSearchScreen(successState.anime.id))
+            }.takeIf { successState.anime.favorite },
             changeAnimeSkipIntro =
-                screenModel::showAnimeSkipIntroDialog
-                    .takeIf { successState.anime.favorite && successState.anime.fetchType == FetchType.Episodes },
+            screenModel::showAnimeSkipIntroDialog
+                .takeIf { successState.anime.favorite && successState.anime.fetchType == FetchType.Episodes },
             onMultiBookmarkClicked = screenModel::bookmarkEpisodes,
             onMultiFillermarkClicked = screenModel::fillermarkEpisodes,
             onMultiMarkAsSeenClicked = screenModel::markEpisodesSeen,
@@ -329,11 +329,11 @@ class AnimeScreen(
             AnimeScreenModel.Dialog.TrackSheet -> {
                 NavigatorAdaptiveSheet(
                     screen =
-                        AnimeTrackInfoDialogHomeScreen(
-                            animeId = successState.anime.id,
-                            animeTitle = successState.anime.title,
-                            sourceId = successState.source.id,
-                        ),
+                    AnimeTrackInfoDialogHomeScreen(
+                        animeId = successState.anime.id,
+                        animeTitle = successState.anime.title,
+                        sourceId = successState.source.id,
+                    ),
                     enableSwipeDismiss = { it.lastItem is AnimeTrackInfoDialogHomeScreen },
                     onDismissRequest = onDismissRequest,
                 )
@@ -375,8 +375,8 @@ class AnimeScreen(
                     nextUpdate = dialog.anime.expectedNextUpdate,
                     onDismissRequest = onDismissRequest,
                     onValueChanged =
-                        { interval: Int -> screenModel.setFetchInterval(dialog.anime, interval) }
-                            .takeIf { screenModel.isUpdateIntervalEnabled },
+                    { interval: Int -> screenModel.setFetchInterval(dialog.anime, interval) }
+                        .takeIf { screenModel.isUpdateIntervalEnabled },
                 )
             }
             AnimeScreenModel.Dialog.ChangeAnimeSkipIntro -> {
@@ -387,13 +387,13 @@ class AnimeScreen(
                 }
                 SkipIntroLengthDialog(
                     initialSkipIntroLength =
-                        if (!successState.anime.skipIntroDisable &&
-                            successState.anime.skipIntroLength == 0
-                        ) {
-                            screenModel.gesturePreferences.defaultIntroLength().get()
-                        } else {
-                            successState.anime.skipIntroLength
-                        },
+                    if (!successState.anime.skipIntroDisable &&
+                        successState.anime.skipIntroLength == 0
+                    ) {
+                        screenModel.gesturePreferences.defaultIntroLength().get()
+                    } else {
+                        successState.anime.skipIntroLength
+                    },
                     onDismissRequest = onDismissRequest,
                     onValueChanged = {
                         updateSkipIntroLength(it.toLong())
@@ -414,13 +414,13 @@ class AnimeScreen(
                     }
                 NavigatorAdaptiveSheet(
                     screen =
-                        EpisodeOptionsDialogScreen(
-                            useExternalDownloader = screenModel.useExternalDownloader,
-                            episodeTitle = episodeTitle,
-                            episodeId = dialog.episode.id,
-                            animeId = dialog.anime.id,
-                            sourceId = dialog.source.id,
-                        ),
+                    EpisodeOptionsDialogScreen(
+                        useExternalDownloader = screenModel.useExternalDownloader,
+                        episodeTitle = episodeTitle,
+                        episodeId = dialog.episode.id,
+                        animeId = dialog.anime.id,
+                        sourceId = dialog.source.id,
+                    ),
                     onDismissRequest = onDismissRequest,
                 )
             }

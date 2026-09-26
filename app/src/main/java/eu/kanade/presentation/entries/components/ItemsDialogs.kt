@@ -90,9 +90,8 @@ fun SetIntervalDialog(
                 if (nextUpdateDays != null && nextUpdateDays >= 0 && interval >= 0) {
                     Text(
                         stringResource(
-                            
-                                AYMR.strings.anime_interval_expected_update
-                            ,
+
+                            AYMR.strings.anime_interval_expected_update,
                             pluralStringResource(
                                 MR.plurals.day,
                                 count = nextUpdateDays,
@@ -108,9 +107,8 @@ fun SetIntervalDialog(
                 } else {
                     Text(
                         stringResource(
-                            
-                                AYMR.strings.anime_interval_expected_update_null
-                            ,
+
+                            AYMR.strings.anime_interval_expected_update_null,
                         ),
                     )
                 }
@@ -124,9 +122,9 @@ fun SetIntervalDialog(
                         contentAlignment = Alignment.Center,
                     ) {
                         val size = DpSize(width = maxWidth / 2, height = 128.dp)
-                        val maxInterval = 
+                        val maxInterval =
                             AnimeFetchInterval.MAX_INTERVAL
-                        
+
                         val items = (0..maxInterval)
                             .map {
                                 if (it == 0) {

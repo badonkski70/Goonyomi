@@ -135,9 +135,9 @@ fun EntryBottomActionMenu(
                     )
                 }
                 if (onRemoveBookmarkClicked != null) {
-                    val removeBookmark = 
+                    val removeBookmark =
                         AYMR.strings.action_remove_bookmark_episode
-                    
+
                     Button(
                         title = stringResource(removeBookmark),
                         icon = Icons.Outlined.BookmarkRemove,
@@ -185,9 +185,9 @@ fun EntryBottomActionMenu(
                     )
                 }
                 if (onMarkPreviousAsViewedClicked != null) {
-                    val previousUnviewed = 
+                    val previousUnviewed =
                         AYMR.strings.action_mark_previous_as_seen
-                    
+
                     Button(
                         title = stringResource(previousUnviewed),
                         icon = ImageVector.vectorResource(R.drawable.ic_done_prev_24dp),

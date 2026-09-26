@@ -12,10 +12,6 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
-
-
-
-
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 

@@ -43,8 +43,8 @@ import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
-import eu.kanade.tachiyomi.util.system.installAppMotionDurationScale
 import eu.kanade.tachiyomi.util.system.cancelNotification
+import eu.kanade.tachiyomi.util.system.installAppMotionDurationScale
 import eu.kanade.tachiyomi.util.system.notify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -191,8 +191,11 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             }
 
             crossfade(
-                (300 * this@App.animatorDurationScale *
-                    if (uiPreferences.disableAnimations().get()) 0f else 1f).toInt(),
+                (
+                    300 *
+                        this@App.animatorDurationScale *
+                        if (uiPreferences.disableAnimations().get()) 0f else 1f
+                    ).toInt(),
             )
             allowRgb565(DeviceUtil.isLowRamDevice(this@App))
             if (networkPreferences.verboseLogging().get()) logger(DebugLogger())

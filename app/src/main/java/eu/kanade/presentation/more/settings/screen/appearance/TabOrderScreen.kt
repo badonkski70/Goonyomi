@@ -82,20 +82,20 @@ class TabOrderScreen : Screen() {
                 )
             },
         ) { paddingValues ->
-val config = NavStyle.tabsConfig(
-            order = NavStyle.parseOrder(orderRaw),
-            showAnime = showAnime,
-            showUpdates = showUpdates,
-            showHistory = showHistory,
-            showBrowse = showBrowse,
-        )
-        TabOrderList(
-            tabs = tabsState,
-            isTabHidden = { it in config.moreTabs },
-            reorderableState = reorderableState,
-            lazyListState = lazyListState,
-            contentPadding = paddingValues + topSmallPaddingValues,
-        )
+            val config = NavStyle.tabsConfig(
+                order = NavStyle.parseOrder(orderRaw),
+                showAnime = showAnime,
+                showUpdates = showUpdates,
+                showHistory = showHistory,
+                showBrowse = showBrowse,
+            )
+            TabOrderList(
+                tabs = tabsState,
+                isTabHidden = { it in config.moreTabs },
+                reorderableState = reorderableState,
+                lazyListState = lazyListState,
+                contentPadding = paddingValues + topSmallPaddingValues,
+            )
         }
     }
 }

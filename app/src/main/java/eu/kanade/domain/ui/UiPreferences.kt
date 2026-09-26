@@ -42,7 +42,6 @@ class UiPreferences(
 
     fun showAnimeTab() = preferenceStore.getBoolean("show_anime_tab", true)
 
-
     fun showUpdatesTab() = preferenceStore.getBoolean("show_updates_tab", true)
 
     fun showHistoryTab() = preferenceStore.getBoolean("show_history_tab", false)

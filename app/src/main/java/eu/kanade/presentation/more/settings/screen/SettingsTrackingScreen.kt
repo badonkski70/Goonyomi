@@ -174,7 +174,7 @@ object SettingsTrackingScreen : SearchableSettings {
                         login = { dialog = LoginDialog(trackerManager.kitsu, MR.strings.email) },
                         logout = { dialog = LogoutDialog(trackerManager.kitsu) },
                     ),
-                        Preference.PreferenceItem.TrackerPreference(
+                    Preference.PreferenceItem.TrackerPreference(
                         tracker = trackerManager.shikimori,
                         login = {
                             context.openInBrowser(
@@ -211,13 +211,13 @@ object SettingsTrackingScreen : SearchableSettings {
                 title = stringResource(MR.strings.enhanced_services),
                 preferenceItems = (
                     enhancedAnimeTrackers.first
-                            .map { service ->
-                                Preference.PreferenceItem.TrackerPreference(
-                                    tracker = service,
-                                    login = { (service as EnhancedAnimeTracker).loginNoop() },
-                                    logout = service::logout,
-                                )
-                            } +
+                        .map { service ->
+                            Preference.PreferenceItem.TrackerPreference(
+                                tracker = service,
+                                login = { (service as EnhancedAnimeTracker).loginNoop() },
+                                logout = service::logout,
+                            )
+                        } +
                         listOf(Preference.PreferenceItem.InfoPreference(enhancedTrackerInfo))
                     ).toImmutableList(),
             ),

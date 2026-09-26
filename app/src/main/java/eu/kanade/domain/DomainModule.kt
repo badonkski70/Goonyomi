@@ -181,7 +181,6 @@ class DomainModule : InjektModule {
         addFactory { SyncEpisodesWithSource(get(), get(), get(), get(), get(), get(), get(), get()) }
         addFactory { FilterEpisodesForDownload(get(), get(), get()) }
 
-
         addSingletonFactory<AnimeHistoryRepository> { AnimeHistoryRepositoryImpl(get()) }
         addFactory { GetAnimeHistory(get()) }
         addFactory { UpsertAnimeHistory(get()) }
@@ -192,8 +191,6 @@ class DomainModule : InjektModule {
         addFactory { GetAnimeExtensionsByType(get(), get()) }
         addFactory { GetAnimeExtensionSources(get()) }
         addFactory { GetAnimeExtensionLanguages(get(), get()) }
-
-
 
         addSingletonFactory<AnimeUpdatesRepository> { AnimeUpdatesRepositoryImpl(get()) }
         addFactory { GetAnimeUpdates(get()) }
@@ -211,7 +208,6 @@ class DomainModule : InjektModule {
         addFactory { SetMigrateSorting(get()) }
         addFactory { ToggleLanguage(get()) }
         addFactory { TrustAnimeExtension(get(), get()) }
-
 
         addSingletonFactory { AnimeExtensionStoreService(get(), get(), get()) }
         addSingletonFactory<AnimeExtensionStoreRepository> { AnimeExtensionStoreRepositoryImpl(get(), get()) }

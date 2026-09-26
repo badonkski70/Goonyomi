@@ -50,7 +50,7 @@ data object UpdatesTab : Tab {
         TabbedScreen(
             titleRes = MR.strings.label_recent_updates,
             tabs =
-                persistentListOf(
+            persistentListOf(
                 animeUpdatesTab(context, fromMore),
             ),
         )

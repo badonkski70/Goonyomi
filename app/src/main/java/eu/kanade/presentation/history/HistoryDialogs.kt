@@ -35,15 +35,14 @@ fun HistoryDeleteDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
             ) {
-                val subtitle = 
+                val subtitle =
                     AYMR.strings.dialog_with_checkbox_remove_description_anime
-                
+
                 Text(text = stringResource(subtitle))
 
                 LabeledCheckbox(
-                    label = 
-                        stringResource(AYMR.strings.dialog_with_checkbox_reset_anime)
-                    ,
+                    label =
+                    stringResource(AYMR.strings.dialog_with_checkbox_reset_anime),
                     checked = removeEverything,
                     onCheckedChange = { removeEverything = it },
                 )

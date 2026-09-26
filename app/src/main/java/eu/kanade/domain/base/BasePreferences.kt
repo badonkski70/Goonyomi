@@ -38,5 +38,4 @@ class BasePreferences(
     fun displayProfile() = preferenceStore.getString("pref_display_profile_key", "")
 
     fun hardwareBitmapThreshold() = preferenceStore.getInt("pref_hardware_bitmap_threshold", GLUtil.SAFE_TEXTURE_LIMIT)
-
 }

@@ -109,7 +109,6 @@ fun Context.createFileInCacheDir(name: String): File {
     return file
 }
 
-
 /**
  * Gets document size of provided [Uri]
  *

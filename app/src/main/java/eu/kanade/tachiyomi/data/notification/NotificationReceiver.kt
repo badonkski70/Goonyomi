@@ -155,7 +155,6 @@ class NotificationReceiver : BroadcastReceiver() {
         context.startActivity(uri.toShareIntent(context, fileMimeType))
     }
 
-    
     /**
      * Starts player activity
      *
@@ -185,7 +184,6 @@ class NotificationReceiver : BroadcastReceiver() {
         BackupRestoreJob.stop(context)
     }
 
-    
     /**
      * Method called when user wants to stop a library update
      *
@@ -204,7 +202,6 @@ class NotificationReceiver : BroadcastReceiver() {
         AppUpdateDownloadJob.stop(context)
     }
 
-    
     /**
      * Method called when user wants to mark anime episodes as seen
      *
@@ -234,7 +231,6 @@ class NotificationReceiver : BroadcastReceiver() {
         }
     }
 
-    
     /**
      * Method called when user wants to download episodes
      *
@@ -286,9 +282,6 @@ class NotificationReceiver : BroadcastReceiver() {
         private const val EXTRA_CHAPTER_ID = "$ID.$NAME.EXTRA_CHAPTER_ID"
         private const val EXTRA_CHAPTER_URL = "$ID.$NAME.EXTRA_CHAPTER_URL"
 
-        
-        
-        
         /**
          * Returns a [PendingIntent] that resumes the anime download queue
          *
@@ -489,9 +482,6 @@ class NotificationReceiver : BroadcastReceiver() {
             )
         }
 
-        
-        
-        
         /**
          * Returns [PendingIntent] that downloads episodes
          *
@@ -519,7 +509,6 @@ class NotificationReceiver : BroadcastReceiver() {
             )
         }
 
-        
         /**
          * Returns [PendingIntent] that opens the anime info controller
          *
@@ -539,7 +528,6 @@ class NotificationReceiver : BroadcastReceiver() {
             )
         }
 
-        
         /**
          * Returns [PendingIntent] that starts a service which stops the library update
          *

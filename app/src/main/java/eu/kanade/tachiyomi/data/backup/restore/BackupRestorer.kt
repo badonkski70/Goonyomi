@@ -80,7 +80,6 @@ class BackupRestorer(
         // Store source mapping for error messages
         animeSourceMapping = backup.backupAnimeSources.associate { it.sourceId to it.name }
 
-
         if (options.libraryEntries) {
         }
         if (options.categories) {

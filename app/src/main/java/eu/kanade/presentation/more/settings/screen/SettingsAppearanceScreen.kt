@@ -63,36 +63,36 @@ object SettingsAppearanceScreen : SearchableSettings {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_theme),
             preferenceItems =
-                persistentListOf(
-                    Preference.PreferenceItem.CustomPreference(
-                        title = stringResource(MR.strings.pref_app_theme),
-                    ) {
-                        Column {
-                            AppThemeModePreferenceWidget(
-                                value = themeMode,
-                                onItemClick = {
-                                    themeModePref.set(it)
-                                    setAppCompatDelegateThemeMode(it)
-                                },
-                            )
+            persistentListOf(
+                Preference.PreferenceItem.CustomPreference(
+                    title = stringResource(MR.strings.pref_app_theme),
+                ) {
+                    Column {
+                        AppThemeModePreferenceWidget(
+                            value = themeMode,
+                            onItemClick = {
+                                themeModePref.set(it)
+                                setAppCompatDelegateThemeMode(it)
+                            },
+                        )
 
-                            AppThemePreferenceWidget(
-                                value = appTheme,
-                                amoled = amoled,
-                                onItemClick = { appThemePref.set(it) },
-                            )
-                        }
+                        AppThemePreferenceWidget(
+                            value = appTheme,
+                            amoled = amoled,
+                            onItemClick = { appThemePref.set(it) },
+                        )
+                    }
+                },
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = amoledPref,
+                    title = stringResource(MR.strings.pref_dark_theme_pure_black),
+                    enabled = themeMode != ThemeMode.LIGHT,
+                    onValueChanged = {
+                        (context as? Activity)?.let { ActivityCompat.recreate(it) }
+                        true
                     },
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = amoledPref,
-                        title = stringResource(MR.strings.pref_dark_theme_pure_black),
-                        enabled = themeMode != ThemeMode.LIGHT,
-                        onValueChanged = {
-                            (context as? Activity)?.let { ActivityCompat.recreate(it) }
-                            true
-                        },
-                    ),
                 ),
+            ),
         )
     }
 
@@ -112,85 +112,85 @@ object SettingsAppearanceScreen : SearchableSettings {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_display),
             preferenceItems =
-                persistentListOf(
-                    Preference.PreferenceItem.TextPreference(
-                        title = stringResource(MR.strings.pref_app_language),
-                        onClick = { navigator.push(AppLanguageScreen()) },
-                    ),
-                    Preference.PreferenceItem.ListPreference(
-                        preference = uiPreferences.tabletUiMode(),
-                        entries =
-                            TabletUiMode.entries
-                                .associateWith { stringResource(it.titleRes) }
-                                .toImmutableMap(),
-                        title = stringResource(MR.strings.pref_tablet_ui_mode),
-                        onValueChanged = {
-                            context.toast(MR.strings.requires_app_restart)
-                            true
-                        },
-                    ),
-                    Preference.PreferenceItem.ListPreference(
-                        preference = uiPreferences.startScreen(),
-                        entries =
-                            StartScreen.entries
-                                .associateWith { stringResource(it.titleRes) }
-                                .toImmutableMap(),
-                        title = stringResource(AYMR.strings.pref_start_screen),
-                        onValueChanged = {
-                            context.toast(MR.strings.requires_app_restart)
-                            true
-                        },
-                    ),
-                    Preference.PreferenceItem.TextPreference(
-                        title = stringResource(AYMR.strings.pref_bottom_nav_order),
-                        subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
-                        onClick = { navigator.push(TabOrderScreen()) },
-                    ),
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = uiPreferences.showAnimeTab(),
-                        title = stringResource(AYMR.strings.pref_bottom_nav_show_anime),
-                        subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
-                    ),
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = uiPreferences.showUpdatesTab(),
-                        title = stringResource(AYMR.strings.pref_bottom_nav_show_updates),
-                        subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
-                    ),
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = uiPreferences.showHistoryTab(),
-                        title = stringResource(AYMR.strings.pref_bottom_nav_show_history),
-                        subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
-                    ),
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = uiPreferences.showBrowseTab(),
-                        title = stringResource(AYMR.strings.pref_bottom_nav_show_browse),
-                        subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
-                    ),
-                    Preference.PreferenceItem.ListPreference(
-                        preference = uiPreferences.dateFormat(),
-                        entries =
-                            DateFormats
-                                .associateWith {
-                                    val formattedDate = UiPreferences.dateFormat(it).format(now)
-                                    "${it.ifEmpty { stringResource(MR.strings.label_default) }} ($formattedDate)"
-                                }.toImmutableMap(),
-                        title = stringResource(MR.strings.pref_date_format),
-                    ),
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = uiPreferences.relativeTime(),
-                        title = stringResource(MR.strings.pref_relative_format),
-                        subtitle =
-                            stringResource(
-                                MR.strings.pref_relative_format_summary,
-                                stringResource(MR.strings.relative_time_today),
-                                formattedNow,
-                            ),
-                    ),
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = uiPreferences.disableAnimations(),
-                        title = stringResource(AYMR.strings.pref_disable_animations),
+            persistentListOf(
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.pref_app_language),
+                    onClick = { navigator.push(AppLanguageScreen()) },
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = uiPreferences.tabletUiMode(),
+                    entries =
+                    TabletUiMode.entries
+                        .associateWith { stringResource(it.titleRes) }
+                        .toImmutableMap(),
+                    title = stringResource(MR.strings.pref_tablet_ui_mode),
+                    onValueChanged = {
+                        context.toast(MR.strings.requires_app_restart)
+                        true
+                    },
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = uiPreferences.startScreen(),
+                    entries =
+                    StartScreen.entries
+                        .associateWith { stringResource(it.titleRes) }
+                        .toImmutableMap(),
+                    title = stringResource(AYMR.strings.pref_start_screen),
+                    onValueChanged = {
+                        context.toast(MR.strings.requires_app_restart)
+                        true
+                    },
+                ),
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(AYMR.strings.pref_bottom_nav_order),
+                    subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
+                    onClick = { navigator.push(TabOrderScreen()) },
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.showAnimeTab(),
+                    title = stringResource(AYMR.strings.pref_bottom_nav_show_anime),
+                    subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.showUpdatesTab(),
+                    title = stringResource(AYMR.strings.pref_bottom_nav_show_updates),
+                    subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.showHistoryTab(),
+                    title = stringResource(AYMR.strings.pref_bottom_nav_show_history),
+                    subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.showBrowseTab(),
+                    title = stringResource(AYMR.strings.pref_bottom_nav_show_browse),
+                    subtitle = stringResource(AYMR.strings.pref_bottom_nav_show_summary),
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = uiPreferences.dateFormat(),
+                    entries =
+                    DateFormats
+                        .associateWith {
+                            val formattedDate = UiPreferences.dateFormat(it).format(now)
+                            "${it.ifEmpty { stringResource(MR.strings.label_default) }} ($formattedDate)"
+                        }.toImmutableMap(),
+                    title = stringResource(MR.strings.pref_date_format),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.relativeTime(),
+                    title = stringResource(MR.strings.pref_relative_format),
+                    subtitle =
+                    stringResource(
+                        MR.strings.pref_relative_format_summary,
+                        stringResource(MR.strings.relative_time_today),
+                        formattedNow,
                     ),
                 ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.disableAnimations(),
+                    title = stringResource(AYMR.strings.pref_disable_animations),
+                ),
+            ),
         )
     }
 }

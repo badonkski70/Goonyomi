@@ -236,7 +236,6 @@ object SettingsLibraryScreen : SearchableSettings {
         )
     }
 
-
     @Composable
     private fun getAnimeBehaviorGroup(
         libraryPreferences: LibraryPreferences,

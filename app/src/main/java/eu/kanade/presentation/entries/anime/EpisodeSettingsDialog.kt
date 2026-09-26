@@ -229,7 +229,8 @@ private fun ColumnScope.DisplayPage(
         checked = showSummaries,
         onClick = { onShowSummariesEnabled(showSummariesFlag) },
     )
-    val showMissingCountFlag = if (showMissingCount) Anime.EPISODE_SHOW_NOT_MISSING_COUNT else Anime.EPISODE_SHOW_MISSING_COUNT
+    val showMissingCountFlag =
+        if (showMissingCount) Anime.EPISODE_SHOW_NOT_MISSING_COUNT else Anime.EPISODE_SHOW_MISSING_COUNT
     CheckboxItem(
         label = stringResource(AYMR.strings.show_episode_missing_count),
         checked = showMissingCount,

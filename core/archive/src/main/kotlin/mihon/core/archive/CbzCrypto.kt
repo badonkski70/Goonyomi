@@ -25,20 +25,20 @@ import javax.crypto.spec.IvParameterSpec
 object CbzCrypto {
     private const val DEFAULT_COVER_NAME = "cover.jpg"
     private val securityPreferences: SecurityPreferences by injectLazy()
-    private val keyStore = KeyStore.getInstance(Keystore).apply {
+    private val keyStore = KeyStore.getInstance(KEYSTORE).apply {
         load(null)
     }
 
     private val encryptionCipherCbz
-        get() = Cipher.getInstance(CryptoSettings).apply {
+        get() = Cipher.getInstance(CRYPTO_SETTINGS).apply {
             init(
                 Cipher.ENCRYPT_MODE,
-                getKey(AliasCbz),
+                getKey(ALIAS_CBZ),
             )
         }
 
     private fun getDecryptCipher(iv: ByteArray, alias: String): Cipher {
-        return Cipher.getInstance(CryptoSettings).apply {
+        return Cipher.getInstance(CRYPTO_SETTINGS).apply {
             init(
                 Cipher.DECRYPT_MODE,
                 getKey(alias),
@@ -53,12 +53,12 @@ object CbzCrypto {
     }
 
     private fun generateKey(alias: String): SecretKey {
-        return KeyGenerator.getInstance(Algorithm).apply {
+        return KeyGenerator.getInstance(ALGORITHM).apply {
             init(
                 KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                    .setKeySize(KeySize)
-                    .setBlockModes(BlockMode)
-                    .setEncryptionPaddings(Padding)
+                    .setKeySize(KEY_SIZE)
+                    .setBlockModes(BLOCK_MODE)
+                    .setEncryptionPaddings(PADDING)
                     .setRandomizedEncryptionRequired(true)
                     .setUserAuthenticationRequired(false)
                     .build(),
@@ -71,8 +71,8 @@ object CbzCrypto {
         outputStream.use { output ->
             output.write(cipher.iv)
             ByteArrayInputStream(password).use { input ->
-                val buffer = ByteArray(BufferSize)
-                while (input.available() > BufferSize) {
+                val buffer = ByteArray(BUFFER_SIZE)
+                while (input.available() > BUFFER_SIZE) {
                     input.read(buffer)
                     output.write(cipher.update(buffer))
                 }
@@ -85,12 +85,12 @@ object CbzCrypto {
     private fun decrypt(encryptedPassword: String, alias: String): ByteArray {
         val inputStream = Base64.decode(encryptedPassword, Base64.DEFAULT).inputStream()
         return inputStream.use { input ->
-            val iv = ByteArray(IvSize)
+            val iv = ByteArray(IV_SIZE)
             input.read(iv)
             val cipher = getDecryptCipher(iv, alias)
             ByteArrayOutputStreamPassword().use { output ->
-                val buffer = ByteArray(BufferSize)
-                while (input.available() > BufferSize) {
+                val buffer = ByteArray(BUFFER_SIZE)
+                while (input.available() > BUFFER_SIZE) {
                     input.read(buffer)
                     output.write(cipher.update(buffer))
                 }
@@ -103,8 +103,8 @@ object CbzCrypto {
     }
 
     fun deleteKeyCbz() {
-        keyStore.deleteEntry(AliasCbz)
-        generateKey(AliasCbz)
+        keyStore.deleteEntry(ALIAS_CBZ)
+        generateKey(ALIAS_CBZ)
     }
 
     fun encryptCbz(password: String): String {
@@ -115,7 +115,7 @@ object CbzCrypto {
         val encryptedPassword = securityPreferences.cbzPassword().get()
         if (encryptedPassword.isBlank()) error("This archive is encrypted please set a password")
 
-        return decrypt(encryptedPassword, AliasCbz)
+        return decrypt(encryptedPassword, ALIAS_CBZ)
     }
 
     fun isPasswordSet(): Boolean {
@@ -163,17 +163,17 @@ object CbzCrypto {
     }
 }
 
-private const val BufferSize = 2048
-private const val KeySize = 256
-private const val IvSize = 16
+private const val BUFFER_SIZE = 2048
+private const val KEY_SIZE = 256
+private const val IV_SIZE = 16
 
-private const val Algorithm = KeyProperties.KEY_ALGORITHM_AES
-private const val BlockMode = KeyProperties.BLOCK_MODE_CBC
-private const val Padding = KeyProperties.ENCRYPTION_PADDING_PKCS7
-private const val CryptoSettings = "$Algorithm/$BlockMode/$Padding"
+private const val ALGORITHM = KeyProperties.KEY_ALGORITHM_AES
+private const val BLOCK_MODE = KeyProperties.BLOCK_MODE_CBC
+private const val PADDING = KeyProperties.ENCRYPTION_PADDING_PKCS7
+private const val CRYPTO_SETTINGS = "$ALGORITHM/$BLOCK_MODE/$PADDING"
 
-private const val Keystore = "AndroidKeyStore"
-private const val AliasCbz = "cbzPw"
+private const val KEYSTORE = "AndroidKeyStore"
+private const val ALIAS_CBZ = "cbzPw"
 
 private class ByteArrayOutputStreamPassword : ByteArrayOutputStream() {
     fun clear() {

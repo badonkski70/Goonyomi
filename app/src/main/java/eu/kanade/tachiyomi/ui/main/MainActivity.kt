@@ -168,7 +168,7 @@ class MainActivity : BaseActivity() {
 
             val isSystemInDarkTheme = isSystemInDarkTheme()
             val statusBarBackgroundColor = when {
-    indexingAnime -> IndexingBannerBackgroundColor
+                indexingAnime -> IndexingBannerBackgroundColor
                 downloadOnly -> DownloadedOnlyBannerBackgroundColor
                 incognitoAnime -> IncognitoModeBannerBackgroundColor
                 else -> MaterialTheme.colorScheme.surface
@@ -252,7 +252,7 @@ class MainActivity : BaseActivity() {
                             val currentScreen = navigator.lastItem
                             if (
                                 currentScreen is BrowseAnimeSourceScreen ||
-                                    (currentScreen is AnimeScreen && currentScreen.fromSource)
+                                (currentScreen is AnimeScreen && currentScreen.fromSource)
                             ) {
                                 navigator.popUntilRoot()
                             }
