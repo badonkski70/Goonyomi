@@ -278,12 +278,26 @@ actual class LocalAnimeSource(
 
                     // Generate the preview from the episode if not available
                     if (this.preview_url == null) {
-                        try {
-                            val tempFileSuffix = anime.title + this.name + DEFAULT_THUMBNAIL_NAME
-                            val updateThumbnail: (InputStream) -> Unit = { thumbnailManager.update(anime, this, it) }
-                            updateImageFromVideo(this, anime, tempFileSuffix, THUMBNAIL_MAX_HEIGHT, updateThumbnail)
-                        } catch (e: Exception) {
-                            logcat(LogPriority.ERROR) { "Couldn't extract thumbnail from video: $e" }
+                        // A thumbnail that is already on disk beats extracting another frame.
+                        // The name first, since that is what update() writes, then the video's own
+                        // name, which is what a person naming files by hand would use.
+                        val existing = thumbnailManager.find(anime.url, "$name-thumbnail")
+                            ?: thumbnailManager.find(
+                                anime.url,
+                                "${url.substringAfterLast('/').substringBeforeLast('.')}-thumbnail",
+                            )
+                        if (existing != null) {
+                            preview_url = existing.uri.toString()
+                        } else {
+                            try {
+                                val tempFileSuffix = anime.title + this.name + DEFAULT_THUMBNAIL_NAME
+                                val updateThumbnail: (
+                                    InputStream,
+                                ) -> Unit = { thumbnailManager.update(anime, this, it) }
+                                updateImageFromVideo(this, anime, tempFileSuffix, THUMBNAIL_MAX_HEIGHT, updateThumbnail)
+                            } catch (e: Exception) {
+                                logcat(LogPriority.ERROR) { "Couldn't extract thumbnail from video: $e" }
+                            }
                         }
                     }
                 }
