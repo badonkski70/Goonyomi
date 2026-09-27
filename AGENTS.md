@@ -10,12 +10,13 @@
 
 - Build the **release** APK for the phone, never the debug APK — the debug variant gets `applicationIdSuffix = ".dev"` and installs as a *separate* app next to the real Goonyomi.
   ```
-  export JAVA_HOME=/home/mark/jdk17
+  export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
   export ANDROID_HOME=/home/mark/Android/Sdk
   export ANDROID_SDK_ROOT=/home/mark/Android/Sdk
   export PATH=$PATH:$JAVA_HOME/bin:$ANDROID_HOME/platform-tools
   ./gradlew :app:assembleRelease
   adb install -r app/build/outputs/apk/release/app-arm64-v8a-release.apk
   ```
-- Test device: Xiaomi 11 Lite 5G NE (adb device `eb8d8789`).
+- `./gradlew :app:compileReleaseKotlin` is the fast correctness gate (~35 s incremental, versus ~4-5 min for a full `assembleRelease`).
+- Test device: Xiaomi 11 Lite 5G NE (adb device `eb8d8789`). When it is not connected, the only device available is `emulator-5554` (x86_64) — install `app-x86_64-release.apk` there instead of arm64.
 - App package id: `xyz.jmir.tachiyomi.mi`.
