@@ -4,7 +4,7 @@ import com.hippo.unifile.UniFile
 
 expect class LocalAnimeSourceFileSystem {
 
-    fun getBaseDirectory(): UniFile?
+    fun getBaseDirectories(): List<UniFile>
 
     fun getFilesInBaseDirectory(): List<UniFile>
 

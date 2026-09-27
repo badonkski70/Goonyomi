@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.shareIn
 
 class StorageManager(
     private val context: Context,
-    storagePreferences: StoragePreferences,
+    private val storagePreferences: StoragePreferences,
 ) {
 
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -65,8 +65,11 @@ class StorageManager(
         return baseDir?.createDirectory(DOWNLOADS_PATH)
     }
 
-    fun getLocalAnimeSourceDirectory(): UniFile? {
-        return baseDir?.createDirectory(LOCAL_ANIMESOURCE_PATH)
+    fun getLocalAnimeSourceDirectories(): List<UniFile> {
+        return buildList {
+            baseDir?.createDirectory(LOCAL_ANIMESOURCE_PATH)?.let(::add)
+            storagePreferences.extraLocalAnimeDirectories().get().mapNotNullTo(this) { getBaseDir(it) }
+        }
     }
 
     fun getFontsDirectory(): UniFile? {

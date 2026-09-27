@@ -543,6 +543,10 @@
       <!-- Data and storage section -->
     <string name="pref_storage_location">Storage location</string>
     <string name="pref_storage_location_info">Used for automatic backups, episode downloads, and local source.</string>
+    <string name="pref_category_local_anime_locations">Local anime folders</string>
+    <string name="pref_extra_local_anime_locations">Add local anime folder</string>
+    <string name="pref_extra_local_anime_locations_info">Pick a folder that directly contains your anime folders. The local source will also scan it, alongside the “localanime” folder above.</string>
+    <string name="remove">Remove</string>
     <string name="pref_create_backup">Create backup</string>
     <string name="pref_create_backup_summ">Can be used to restore current library</string>
     <string name="pref_restore_backup">Restore backup</string>

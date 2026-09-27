@@ -127,8 +127,7 @@ class EpisodeLoader {
             return try {
                 val (animeDirName, episodeName) = episode.url.split('/', limit = 2)
                 val fileSystem: LocalAnimeSourceFileSystem = Injekt.get()
-                val videoFile = fileSystem.getBaseDirectory()
-                    ?.findFile(animeDirName)
+                val videoFile = fileSystem.getAnimeDirectory(animeDirName)
                     ?.findFile(episodeName)
                 val videoUri = videoFile!!.uri
 

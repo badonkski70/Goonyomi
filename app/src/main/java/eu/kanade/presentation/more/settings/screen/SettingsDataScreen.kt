@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -61,6 +62,7 @@ import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import logcat.LogPriority
@@ -110,6 +112,8 @@ object SettingsDataScreen : SearchableSettings {
             getStorageLocationPref(storagePreferences = storagePreferences),
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_info)),
 
+            getExtraLocalAnimeLocationsGroup(storagePreferences = storagePreferences),
+
             getBackupAndRestoreGroup(backupPreferences = backupPreferences),
             getDataGroup(),
             getExportGroup(),
@@ -119,6 +123,7 @@ object SettingsDataScreen : SearchableSettings {
     @Composable
     fun storageLocationPicker(
         storageDirPref: tachiyomi.core.common.preference.Preference<String>,
+        onPicked: (String) -> Unit = { storageDirPref.set(it) },
     ): ManagedActivityResultLauncher<Uri?, Uri?> {
         val context = LocalContext.current
 
@@ -142,7 +147,7 @@ object SettingsDataScreen : SearchableSettings {
                 }
 
                 UniFile.fromUri(context, uri)?.let {
-                    storageDirPref.set(it.uri.toString())
+                    onPicked(it.uri.toString())
                 }
             }
         }
@@ -182,6 +187,57 @@ object SettingsDataScreen : SearchableSettings {
                     context.toast(MR.strings.file_picker_error)
                 }
             },
+        )
+    }
+
+    @Composable
+    private fun getExtraLocalAnimeLocationsGroup(
+        storagePreferences: StoragePreferences,
+    ): Preference.PreferenceGroup {
+        val context = LocalContext.current
+        val dirsPref = storagePreferences.extraLocalAnimeDirectories()
+        val dirs by dirsPref.collectAsState()
+        val pickDirectory = storageLocationPicker(storagePreferences.baseStorageDirectory()) { uri ->
+            dirsPref.set(dirsPref.get() + uri)
+        }
+
+        val items = buildList<Preference.PreferenceItem<out Any>> {
+            add(
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.pref_extra_local_anime_locations),
+                    subtitle = stringResource(MR.strings.pref_extra_local_anime_locations_info),
+                    onClick = {
+                        try {
+                            pickDirectory.launch(null)
+                        } catch (e: ActivityNotFoundException) {
+                            context.toast(MR.strings.file_picker_error)
+                        }
+                    },
+                ),
+            )
+            dirs.forEach { uri ->
+                val path = remember(uri) { UniFile.fromUri(context, uri.toUri())?.displayablePath ?: uri }
+                add(
+                    Preference.PreferenceItem.CustomPreference(title = path) {
+                        BasePreferenceWidget(
+                            title = path,
+                            widget = {
+                                IconButton(onClick = { dirsPref.set(dirsPref.get() - uri) }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Delete,
+                                        contentDescription = stringResource(MR.strings.remove),
+                                    )
+                                }
+                            },
+                        )
+                    },
+                )
+            }
+        }
+
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_category_local_anime_locations),
+            preferenceItems = items.toPersistentList(),
         )
     }
 

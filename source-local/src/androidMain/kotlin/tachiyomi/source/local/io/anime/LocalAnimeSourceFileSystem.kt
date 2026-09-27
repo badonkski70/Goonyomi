@@ -7,24 +7,22 @@ actual class LocalAnimeSourceFileSystem(
     private val storageManager: StorageManager,
 ) {
 
-    actual fun getBaseDirectory(): UniFile? {
-        return storageManager.getLocalAnimeSourceDirectory()
+    actual fun getBaseDirectories(): List<UniFile> {
+        return storageManager.getLocalAnimeSourceDirectories()
     }
 
+    // ponytail: roots are searched in order and the first hit wins, so a series folder name that
+    // exists in two roots resolves to the earlier one. Key the url by root path if that matters.
     actual fun getFilesInBaseDirectory(): List<UniFile> {
-        return getBaseDirectory()?.listFiles().orEmpty().toList()
+        return getBaseDirectories().flatMap { it.listFiles().orEmpty().asList() }
     }
 
     actual fun getAnimeDirectory(name: String): UniFile? {
-        return getBaseDirectory()
-            ?.findFile(name)
-            ?.takeIf { it.isDirectory }
+        return getBaseDirectories()
+            .firstNotNullOfOrNull { it.findFile(name)?.takeIf { dir -> dir.isDirectory } }
     }
 
     actual fun getFilesInAnimeDirectory(name: String): List<UniFile> {
-        return getBaseDirectory()
-            ?.findFile(name)
-            ?.takeIf { it.isDirectory }
-            ?.listFiles().orEmpty().toList()
+        return getAnimeDirectory(name)?.listFiles().orEmpty().toList()
     }
 }
