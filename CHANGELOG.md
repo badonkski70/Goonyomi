@@ -10,6 +10,20 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Fixed` - for any bug fixes.
 - `Other` - for technical stuff.
 
+## [Unreleased]
+
+### Added
+
+- Multiple local anime folders: add extra roots in Data and storage and the local source scans all of them
+
+### Improved
+
+- Local covers and episode previews load much faster: each anime folder is read once instead of three times, and images behind a `content://` uri are cached instead of being re-read and re-decoded on every cold start
+
+### Fixed
+
+- Fixed the frame extractor leaving a temp file behind in the cache for every generated cover, background and episode preview
+
 ## [v0.18.2.1] - 2026-09-14
 
 ### Added
