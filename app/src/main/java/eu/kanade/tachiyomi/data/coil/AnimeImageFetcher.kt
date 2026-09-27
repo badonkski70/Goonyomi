@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.data.coil
 
-import androidx.core.net.toUri
 import coil3.Extras
 import coil3.ImageLoader
 import coil3.decode.DataSource
@@ -11,7 +10,6 @@ import coil3.fetch.Fetcher
 import coil3.fetch.SourceFetchResult
 import coil3.getOrDefault
 import coil3.request.Options
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.cache.AnimeBackgroundCache
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
@@ -24,9 +22,6 @@ import okhttp3.Request
 import okhttp3.Response
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
-import okio.Source
-import okio.buffer
-import okio.sink
 import okio.source
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.model.Anime
@@ -56,6 +51,7 @@ class AnimeImageFetcher(
     private val sourceLazy: Lazy<AnimeHttpSource?>,
     private val callFactoryLazy: Lazy<Call.Factory>,
     private val imageLoader: ImageLoader,
+    private val coverCache: AnimeCoverCache,
 ) : Fetcher {
 
     private val diskCacheKey: String
@@ -82,12 +78,10 @@ class AnimeImageFetcher(
     }
 
     private fun uniFileLoader(urlString: String): FetchResult {
-        val uniFile = UniFile.fromUri(options.context, urlString.toUri())!!
-        val tempFile = uniFile.openInputStream().source().buffer()
-        return SourceFetchResult(
-            source = ImageSource(source = tempFile, fileSystem = FileSystem.SYSTEM),
-            mimeType = "image/*",
-            dataSource = DataSource.DISK,
+        return localImageFetchResult(
+            context = options.context,
+            urlString = urlString,
+            cacheDir = coverCache.cacheDir.takeIf { isLibraryAnime },
         )
     }
 
@@ -207,7 +201,7 @@ class AnimeImageFetcher(
         return try {
             imageLoader.diskCache?.run {
                 fileSystem.source(snapshot.data).use { input ->
-                    writeSourceToCoverCache(input, cacheFile)
+                    writeToImageCache(input, cacheFile)
                 }
                 remove(diskCacheKey)
             }
@@ -222,25 +216,12 @@ class AnimeImageFetcher(
         if (cacheFile == null || !options.diskCachePolicy.writeEnabled) return null
         return try {
             response.peekBody(Long.MAX_VALUE).source().use { input ->
-                writeSourceToCoverCache(input, cacheFile)
+                writeToImageCache(input, cacheFile)
             }
             cacheFile.takeIf { it.exists() }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to write response data to cover cache ${cacheFile.name}" }
             null
-        }
-    }
-
-    private fun writeSourceToCoverCache(input: Source, cacheFile: File) {
-        cacheFile.parentFile?.mkdirs()
-        cacheFile.delete()
-        try {
-            cacheFile.sink().buffer().use { output ->
-                output.writeAll(input)
-            }
-        } catch (e: Exception) {
-            cacheFile.delete()
-            throw e
         }
     }
 
@@ -330,6 +311,7 @@ class AnimeImageFetcher(
                 sourceLazy = lazy { sourceManager.get(data.source) as? AnimeHttpSource },
                 callFactoryLazy = callFactoryLazy,
                 imageLoader = imageLoader,
+                coverCache = coverCache,
             )
         }
     }
@@ -352,6 +334,7 @@ class AnimeImageFetcher(
                 sourceLazy = lazy { sourceManager.get(data.sourceId) as? AnimeHttpSource },
                 callFactoryLazy = callFactoryLazy,
                 imageLoader = imageLoader,
+                coverCache = coverCache,
             )
         }
     }

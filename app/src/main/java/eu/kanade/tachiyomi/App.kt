@@ -32,6 +32,7 @@ import eu.kanade.tachiyomi.data.coil.AnimeCoverKeyer
 import eu.kanade.tachiyomi.data.coil.AnimeImageFetcher
 import eu.kanade.tachiyomi.data.coil.AnimeKeyer
 import eu.kanade.tachiyomi.data.coil.BufferedSourceFetcher
+import eu.kanade.tachiyomi.data.coil.LocalImageFileFetcher
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.di.AppModule
@@ -65,6 +66,7 @@ import tachiyomi.presentation.widget.entries.anime.AnimeWidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
+import java.io.File
 import java.security.Security
 
 class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factory {
@@ -183,6 +185,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                 add(TachiyomiImageDecoder.Factory())
                 // Fetcher.Factory
                 add(BufferedSourceFetcher.Factory())
+                add(LocalImageFileFetcher.Factory(File(cacheDir, "previews")))
                 add(AnimeImageFetcher.AnimeFactory(callFactoryLazy))
                 add(AnimeImageFetcher.AnimeCoverFactory(callFactoryLazy))
                 // Keyer

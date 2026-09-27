@@ -6,7 +6,7 @@ import java.io.InputStream
 
 expect class LocalAnimeBackgroundManager {
 
-    fun find(animeUrl: String): UniFile?
+    fun find(animeUrl: String, files: List<UniFile>? = null): UniFile?
 
     fun update(anime: SAnime, inputStream: InputStream): UniFile?
 }

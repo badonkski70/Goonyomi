@@ -51,6 +51,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import eu.kanade.presentation.entries.components.DotSeparatorText
 import eu.kanade.presentation.entries.components.ItemCover
+import eu.kanade.tachiyomi.data.coil.LocalImage
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import me.saket.swipe.SwipeableActionsBox
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -367,7 +368,7 @@ private fun EpisodeThumbnail(
                 .width(targetWidth.dp)
                 .padding(end = 8.dp),
             data = ImageRequest.Builder(LocalContext.current)
-                .data(previewUrl)
+                .data(LocalImage(previewUrl))
                 .crossfade(true)
                 .build(),
         )

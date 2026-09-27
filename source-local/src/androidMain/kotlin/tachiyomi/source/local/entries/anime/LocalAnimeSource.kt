@@ -138,18 +138,20 @@ actual class LocalAnimeSource(
     }
 
     private fun getSAnime(animeDir: String?): SAnime {
+        val animeDirFiles = fileSystem.getFilesInAnimeDirectory(animeDir.orEmpty())
+
         return SAnime.create().apply {
             title = animeDir.orEmpty().substringAfterLast(File.separator)
             url = animeDir.orEmpty()
-            fetch_type = fetchTypeManager.find(animeDir.orEmpty())
+            fetch_type = fetchTypeManager.find(animeDir.orEmpty(), animeDirFiles)
 
             // Try to find the cover
-            coverManager.find(animeDir.orEmpty())?.let {
+            coverManager.find(animeDir.orEmpty(), animeDirFiles)?.let {
                 thumbnail_url = it.uri.toString()
             }
 
             // Try to find the background
-            backgroundManager.find(animeDir.orEmpty())?.let {
+            backgroundManager.find(animeDir.orEmpty(), animeDirFiles)?.let {
                 background_url = it.uri.toString()
             }
         }
@@ -183,15 +185,15 @@ actual class LocalAnimeSource(
 
     // Anime details related
     private suspend fun getOldAnimeDetails(anime: SAnime): SAnime = withIOContext {
-        coverManager.find(anime.url)?.let {
+        val animeDirFiles = fileSystem.getFilesInAnimeDirectory(anime.url)
+
+        coverManager.find(anime.url, animeDirFiles)?.let {
             anime.thumbnail_url = it.uri.toString()
         }
 
-        backgroundManager.find(anime.url)?.let {
+        backgroundManager.find(anime.url, animeDirFiles)?.let {
             anime.background_url = it.uri.toString()
         }
-
-        val animeDirFiles = fileSystem.getFilesInAnimeDirectory(anime.url)
 
         animeDirFiles
             .firstOrNull { it.extension == "json" && it.nameWithoutExtension == "details" }
@@ -345,25 +347,31 @@ actual class LocalAnimeSource(
             "tmp_",
             tempFileSuffix,
         )
-        val outFile = tempFile.path
+        try {
+            val outFile = tempFile.path
 
-        val episodeName = episode.url.split('/', limit = 2).last()
-        val animeDir = fileSystem.getAnimeDirectory(anime.url)!!
-        val episodeFile = animeDir.findFile(episodeName)!!
-        val episodeFilename = { episodeFile.toFFmpegString(context) }
+            val episodeName = episode.url.split('/', limit = 2).last()
+            val animeDir = fileSystem.getAnimeDirectory(anime.url)!!
+            val episodeFile = animeDir.findFile(episodeName)!!
+            val episodeFilename = { episodeFile.toFFmpegString(context) }
 
-        val ffProbe = com.arthenica.ffmpegkit.FFprobeKit.execute(
-            "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"${episodeFilename()}\"",
-        )
-        val duration = ffProbe.allLogsAsString.trim().toFloat()
-        val second = duration.toInt() / 2
+            val ffProbe = com.arthenica.ffmpegkit.FFprobeKit.execute(
+                "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"${episodeFilename()}\"",
+            )
+            val duration = ffProbe.allLogsAsString.trim().toFloat()
+            val second = duration.toInt() / 2
 
-        com.arthenica.ffmpegkit.FFmpegKit.execute(
-            "-ss $second -i \"${episodeFilename()}\" -frames:v 1 -vf scale=144:-2 -update true \"$outFile\" -y",
-        )
+            com.arthenica.ffmpegkit.FFmpegKit.execute(
+                "-ss $second -i \"${episodeFilename()}\" -frames:v 1 -vf scale=144:-2 -update true \"$outFile\" -y",
+            )
 
-        if (tempFile.length() > 0L) {
-            updateImage(tempFile.inputStream())
+            if (tempFile.length() > 0L) {
+                updateImage(tempFile.inputStream())
+            }
+        } finally {
+            // createTempFile never cleans up after itself, and this runs once per cover,
+            // background and episode preview.
+            tempFile.delete()
         }
     }
 

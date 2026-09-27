@@ -16,8 +16,8 @@ actual class LocalAnimeBackgroundManager(
     private val fileSystem: LocalAnimeSourceFileSystem,
 ) {
 
-    actual fun find(animeUrl: String): UniFile? {
-        return fileSystem.getFilesInAnimeDirectory(animeUrl)
+    actual fun find(animeUrl: String, files: List<UniFile>?): UniFile? {
+        return (files ?: fileSystem.getFilesInAnimeDirectory(animeUrl))
             // Get all file whose names start with 'background'
             .filter { it.isFile && it.nameWithoutExtension.equals("background", ignoreCase = true) }
             // Get the first actual image

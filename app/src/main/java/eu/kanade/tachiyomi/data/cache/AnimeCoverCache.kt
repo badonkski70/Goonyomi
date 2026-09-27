@@ -25,7 +25,7 @@ class AnimeCoverCache(private val context: Context) {
     /**
      * Cache directory used for cache management.
      */
-    private val cacheDir = getCacheDir(COVERS_DIR)
+    val cacheDir = getCacheDir(COVERS_DIR)
 
     private val customCoverCacheDir = getCacheDir(CUSTOM_COVERS_DIR)
 
