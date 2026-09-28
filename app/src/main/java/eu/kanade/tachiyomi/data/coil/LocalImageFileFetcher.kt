@@ -57,7 +57,10 @@ class LocalImageFileFetcher(
  * first, or the raw stream when there is no [cacheDir] or the copy fails.
  */
 internal fun localImageFetchResult(context: Context, urlString: String, cacheDir: File?): FetchResult {
-    val uniFile = UniFile.fromUri(context, urlString.toUri())!!
+    // Was `!!`, which threw a bare NullPointerException for a uri the provider would not resolve
+    // and left nothing in the log. Say which image it was instead.
+    val uniFile = UniFile.fromUri(context, urlString.toUri())
+        ?: error("Can't resolve $urlString")
 
     if (cacheDir != null) {
         val cacheFile = File(cacheDir, DiskUtil.hashKeyForDisk("$urlString-${uniFile.lastModified()}"))

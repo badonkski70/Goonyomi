@@ -71,12 +71,19 @@ class AnimeImageFetcher(
         if (url == null) error("No cover specified")
         return when (getResourceType(url)) {
             Type.URL -> httpLoader()
-            Type.File -> fileLoader(File(url.substringAfter("file://")))
+            // A path based cover went straight to java.io.File, which bypassed the copy to the cover
+            // cache and then failed later inside okio with a bare FileNotFoundException. Same code
+            // path as a content uri: UniFile, cached, and one clear error if it cannot be read.
+            Type.File -> uniFileLoader(url)
             Type.URI -> uniFileLoader(url)
             null -> error("Invalid image")
         }
     }
 
+    /**
+     * [urlString] is a `content://` uri or a `file://`/absolute path. A path is wrapped by [UniFile]
+     * as a raw file, so this needs the same storage access the rest of the local source relies on.
+     */
     private fun uniFileLoader(urlString: String): FetchResult {
         return localImageFetchResult(
             context = options.context,
