@@ -106,6 +106,7 @@ import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.source.local.entries.anime.LocalAnimeSource
 import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -292,6 +293,15 @@ class AnimeScreenModel(
     fun fetchAllFromSource(manualFetch: Boolean = true) {
         screenModelScope.launch {
             updateSuccessState { it.copy(isRefreshingData = true) }
+            // A manual refresh of a local series re-extracts its episode thumbnails, so a bad one
+            // can be replaced. Scoped to this anime, the rest of the library is left alone.
+            if (manualFetch) {
+                successState?.let { state ->
+                    if (state.source.isLocal()) {
+                        LocalAnimeSource.requestThumbnailRefresh(state.anime.url)
+                    }
+                }
+            }
             fetchAllFromSource(
                 manualFetch = manualFetch,
                 fetchDetails = true,

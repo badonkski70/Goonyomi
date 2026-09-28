@@ -40,6 +40,7 @@ import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.io.InputStream
 import java.text.SimpleDateFormat
+import java.util.Collections
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
@@ -237,6 +238,9 @@ actual class LocalAnimeSource(
 
     // Episodes
     private suspend fun getOldEpisodeList(anime: SAnime): List<SEpisode> = withIOContext {
+        // An in series refresh re-extracts every frame, so the previews on disk are stale.
+        val forceRefresh = forceThumbnailRefresh.remove(anime.url)
+
         // Remove legacy thumbnails that used to be stored next to the videos
         fileSystem.getFilesInAnimeDirectory(anime.url)
             .filter { it.isFile && it.name.orEmpty().endsWith("-$DEFAULT_THUMBNAIL_NAME") }
@@ -283,11 +287,15 @@ actual class LocalAnimeSource(
                         // A thumbnail that is already on disk beats extracting another frame.
                         // The name first, since that is what update() writes, then the video's own
                         // name, which is what a person naming files by hand would use.
-                        val existing = thumbnailManager.find(anime.url, "$name-thumbnail")
-                            ?: thumbnailManager.find(
-                                anime.url,
-                                "${url.substringAfterLast('/').substringBeforeLast('.')}-thumbnail",
-                            )
+                        val existing = if (forceRefresh) {
+                            null
+                        } else {
+                            thumbnailManager.find(anime.url, "$name-thumbnail")
+                                ?: thumbnailManager.find(
+                                    anime.url,
+                                    "${url.substringAfterLast('/').substringBeforeLast('.')}-thumbnail",
+                                )
+                        }
                         if (existing != null) {
                             preview_url = existing.uri.toString()
                         } else {
@@ -416,6 +424,17 @@ actual class LocalAnimeSource(
         private const val THUMBNAIL_MAX_HEIGHT = 144
         private const val COVER_MAX_HEIGHT = 720
         private val LATEST_THRESHOLD = TimeUnit.MILLISECONDS.convert(7, TimeUnit.DAYS)
+
+        /**
+         * Anime urls whose episode thumbnails the next [getOldEpisodeList] must extract afresh
+         * instead of reusing what is in `.thumbnails`. Set by the refresh inside a series, which
+         * covers the one folder that screen is on and no other.
+         */
+        private val forceThumbnailRefresh = Collections.synchronizedSet(mutableSetOf<String>())
+
+        fun requestThumbnailRefresh(animeUrl: String) {
+            forceThumbnailRefresh += animeUrl
+        }
     }
 }
 
