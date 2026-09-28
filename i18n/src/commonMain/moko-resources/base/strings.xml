@@ -620,7 +620,8 @@
     <string name="database_clean">Nothing to clear</string>
     <string name="pref_clear_webview_data">Clear WebView data</string>
     <string name="webview_data_deleted">WebView data cleared</string>
-    <string name="pref_refresh_library_covers">Refresh library covers</string>
+    <string name="pref_refresh_library_covers">Refresh series thumbnails</string>
+    <string name="pref_refresh_episode_thumbnails">Refresh episode thumbnails</string>
     <string name="pref_reset_viewer_flags">Reset per-series reader settings</string>
     <string name="pref_reset_viewer_flags_summary">Resets reading mode and orientation of all series</string>
     <string name="pref_reset_viewer_flags_success">All reader settings reset</string>

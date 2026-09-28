@@ -321,8 +321,13 @@ object SettingsAdvancedScreen : SearchableSettings {
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_refresh_library_covers),
                     onClick = {
-                        AnimeLibraryUpdateJob.startNow(context)
                         AnimeMetadataUpdateJob.startNow(context)
+                    },
+                ),
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.pref_refresh_episode_thumbnails),
+                    onClick = {
+                        AnimeLibraryUpdateJob.startNow(context)
                     },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
