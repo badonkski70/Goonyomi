@@ -16,6 +16,9 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 
 - Multiple local anime folders: add extra roots in Data and storage and the local source scans all of them
 - Photos next to the videos: image files in a local anime folder are listed as episodes, use themselves as the preview, and open in a full screen zoomable gallery with swipe between photos
+- Gifs animate in the photo viewer
+- Refreshing inside a series re-extracts that one folder's episode thumbnails, so a bad preview can actually be replaced without re-scanning the rest of the library
+- Separate "Refresh series thumbnails" and "Refresh episode thumbnails" actions in Settings, instead of one button that did both
 
 ### Improved
 
@@ -25,6 +28,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 
 - Fixed the frame extractor leaving a temp file behind in the cache for every generated cover, background and episode preview
+- Fixed series covers not loading at all: a cover stored as a path went straight to `java.io.File`, which skipped the cover cache and then failed inside the decoder, while the episode previews in the same folder were fine
+- Tapping a photo in the viewer no longer closes it, the close button and the back gesture still do
 
 ## [v0.18.2.1] - 2026-09-14
 
