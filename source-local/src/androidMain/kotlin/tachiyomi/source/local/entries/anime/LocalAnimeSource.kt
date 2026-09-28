@@ -258,6 +258,8 @@ actual class LocalAnimeSource(
                     url = "${anime.url}/${episodeFile.name}"
                     name = episodeFile.nameWithoutExtension.orEmpty()
                     date_upload = episodeFile.lastModified()
+                    // A photo is its own preview, there is no frame to extract from it.
+                    preview_url = if (ArchiveAnime.isImage(episodeFile)) episodeFile.uri.toString() else null
 
                     val episodeNumber = EpisodeRecognition.parseEpisodeNumber(
                         anime.title,
@@ -307,29 +309,44 @@ actual class LocalAnimeSource(
                 if (e == 0) e2.name.compareToCaseInsensitiveNaturalOrder(e1.name) else e
             }
 
+        // The cover and the background are frames lifted out of a video, so a folder of photos
+        // falls back to the first photo instead.
+        val videoEpisode = episodes.lastOrNull { !ArchiveAnime.isImageUrl(it.url) }
+        val photoEpisode = episodes.lastOrNull { ArchiveAnime.isImageUrl(it.url) }
+
         // Generate the cover from the first episode found if not available
         if (anime.thumbnail_url == null || coverManager.find(anime.url) == null) {
-            try {
-                episodes.lastOrNull()?.let { episode ->
+            if (videoEpisode != null) {
+                try {
                     val tempFileSuffix = anime.title + DEFAULT_COVER_NAME
                     val updateCover: (InputStream) -> Unit = { coverManager.update(anime, it) }
-                    updateImageFromVideo(episode, anime, tempFileSuffix, COVER_MAX_HEIGHT, updateCover)
+                    updateImageFromVideo(videoEpisode, anime, tempFileSuffix, COVER_MAX_HEIGHT, updateCover)
+                } catch (e: Exception) {
+                    logcat(LogPriority.ERROR) { "Couldn't extract cover from video: $e" }
                 }
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR) { "Couldn't extract cover from video: $e" }
+            } else {
+                anime.thumbnail_url = photoEpisode?.preview_url
             }
         }
 
         // Generate the background from the first episode found if not available
         if (anime.background_url == null || backgroundManager.find(anime.url) == null) {
-            try {
-                episodes.lastOrNull()?.let { episode ->
+            if (videoEpisode != null) {
+                try {
                     val tempFileSuffix = anime.title + DEFAULT_BACKGROUND_NAME
                     val updateBackground: (InputStream) -> Unit = { backgroundManager.update(anime, it) }
-                    updateImageFromVideo(episode, anime, tempFileSuffix, COVER_MAX_HEIGHT, updateBackground)
+                    updateImageFromVideo(
+                        videoEpisode,
+                        anime,
+                        tempFileSuffix,
+                        COVER_MAX_HEIGHT,
+                        updateBackground,
+                    )
+                } catch (e: Exception) {
+                    logcat(LogPriority.ERROR) { "Couldn't extract background from video: $e" }
                 }
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR) { "Couldn't extract background from video: $e" }
+            } else {
+                anime.background_url = photoEpisode?.preview_url
             }
         }
 

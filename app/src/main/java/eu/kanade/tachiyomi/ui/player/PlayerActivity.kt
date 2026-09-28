@@ -74,6 +74,7 @@ import eu.kanade.tachiyomi.data.torrent.service.TorrentServerService
 import eu.kanade.tachiyomi.databinding.PlayerLayoutBinding
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
+import eu.kanade.tachiyomi.ui.image.LocalImageViewer
 import eu.kanade.tachiyomi.ui.player.controls.PlayerControls
 import eu.kanade.tachiyomi.ui.player.settings.AdvancedPlayerPreferences
 import eu.kanade.tachiyomi.ui.player.settings.AudioPreferences
@@ -192,6 +193,7 @@ class PlayerActivity : BaseActivity() {
             finish()
             return
         }
+
         NotificationReceiver.dismissNotification(
             this,
             animeId.hashCode(),
@@ -201,6 +203,12 @@ class PlayerActivity : BaseActivity() {
         viewModel.saveCurrentEpisodeWatchingProgress()
 
         lifecycleScope.launchNonCancellable {
+            // A photo has nothing to play, it opens in the gallery instead.
+            if (LocalImageViewer.launchIfImage(this@PlayerActivity, episodeId)) {
+                withUIContext { finish() }
+                return@launchNonCancellable
+            }
+
             viewModel.updateIsLoadingEpisode(true)
             viewModel.updateIsLoadingHosters(true)
 
@@ -1007,6 +1015,13 @@ class PlayerActivity : BaseActivity() {
         viewModel.resetState()
 
         lifecycleScope.launch {
+            // The playlist ran into a photo, which opens in the gallery instead of playing.
+            if (episodeId != null && LocalImageViewer.launchIfImage(this@PlayerActivity, episodeId)) {
+                viewModel.isLoading.update { _ -> false }
+                finish()
+                return@launch
+            }
+
             viewModel.updateIsLoadingEpisode(true)
             viewModel.updateIsLoadingHosters(true)
             viewModel.cancelHosterVideoLinksJob()

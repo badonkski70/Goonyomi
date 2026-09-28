@@ -67,11 +67,36 @@ but never timed. Treat any loading speed-up number as an estimate.
   pre-existing and intentionally persistent; the new previews cache lives in
   `cacheDir` so the OS reclaims it.
 
-## Open idea, not started
+## Gallery support
 
-The app was asked to double as a gallery for viewing images. Groundwork for that
-decision: the local source only accepts video extensions
-(`ArchiveAnime.kt:8`), there is no zoomable image-viewer component, and the
-manifest has no `image/*` intent filter, so the app cannot currently be chosen
-as a viewer for image files. The user paused to think about the approach before
-anything was written.
+The app doubles as a gallery for the images in its local anime folders.
+
+- `ArchiveAnime` (`source-local/.../io/ArchiveAnime.kt`) now accepts image
+  extensions next to the video ones, so photos are listed as episodes.
+  `isImageUrl(url)` is the same test for the call sites that only hold an
+  episode url. `cover`, `background` and `thumbnail` are excluded, otherwise
+  the art the app generates into the folder shows up as an episode of its own.
+- A photo is its own `preview_url`, so no frame is extracted from it, and the
+  cover and background of a photo only folder fall back to a photo instead of
+  calling ffmpeg on an image.
+- `LocalImageViewer.launchIfImage()` (`app/.../ui/image/ImageViewerActivity.kt`)
+  is the single guard: it returns true and opens the gallery when the episode is
+  a photo, false when the caller should play it. It is called from
+  `MainActivity.startPlayerActivity` (which every episode tap, swipe and
+  playlist shortcut routes through), `NotificationReceiver.openEpisode`,
+  `NotificationReceiver.openEpisodePendingActivity` (a photo has nothing to
+  play, so that notification opens the anime instead) and twice in
+  `PlayerActivity`: `onNewIntent` and `changeEpisode`. Both player entry points
+  are needed, `changeEpisode` does not go through `onNewIntent`. Without the
+  second one, the next episode button in a mixed folder handed the jpeg to mpv,
+  which displayed it as a still image.
+- The gallery itself is a `HorizontalPager` over the folder's photos wrapped in
+  `PhotoView`, which was already on the classpath from the deleted manga
+  reader. It reuses the `LocalImage` coil fetcher, because Coil's own
+  `ContentUriFetcher` would win for a `content://` uri.
+- Not done: the manifest still has no `image/*` intent filter, so the app
+  cannot be chosen as the system viewer for image files. Also, in list display
+  the per-anime "show previews" switch still decides whether a row shows its
+  photo, so a photo folder shows text rows until that is switched on. Grid
+  display always shows them.
+

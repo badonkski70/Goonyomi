@@ -15,10 +15,12 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Added
 
 - Multiple local anime folders: add extra roots in Data and storage and the local source scans all of them
+- Photos next to the videos: image files in a local anime folder are listed as episodes, use themselves as the preview, and open in a full screen zoomable gallery with swipe between photos
 
 ### Improved
 
 - Local covers and episode previews load much faster: each anime folder is read once instead of three times, and images behind a `content://` uri are cached instead of being re-read and re-decoded on every cold start
+- The cover and background of a local anime folder that holds only photos now come from the photos themselves, instead of trying and failing to lift a frame out of an image
 
 ### Fixed
 

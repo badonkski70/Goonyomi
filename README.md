@@ -38,6 +38,7 @@ Discover and watch anime, cartoons, series, and more – easier than ever on you
 * Global disable-animations switch.
 * Per-anime missing-items flag, plus local thumbnail fixes.
 * Scan several local folders for anime, not just the one in the app's storage directory.
+* Photos live alongside the videos: image files in a local folder open in a zoomable gallery.
 * Download cleanup: remove orphaned, read, or not-in-library chapters.
 * Filename options: include chapter URL hash, disallow non-ASCII names.
 * Password-protected (encrypted) downloads.

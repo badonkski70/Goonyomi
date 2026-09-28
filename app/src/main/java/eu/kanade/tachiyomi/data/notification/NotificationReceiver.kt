@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.data.updater.AppUpdateDownloadJob
+import eu.kanade.tachiyomi.ui.image.LocalImageViewer
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.PlayerActivity
 import eu.kanade.tachiyomi.util.system.cancelNotification
@@ -30,6 +31,7 @@ import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.model.toEpisodeUpdate
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.source.local.io.ArchiveAnime
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -166,6 +168,9 @@ class NotificationReceiver : BroadcastReceiver() {
         val anime = runBlocking { getAnime.await(animeId) }
         val episode = runBlocking { getEpisode.await(episodeId) }
         if (anime != null && episode != null) {
+            // A photo has nothing to play, it opens in the gallery instead.
+            if (runBlocking { LocalImageViewer.launchIfImage(context, episode) }) return
+
             val intent = PlayerActivity.newIntent(context, anime.id, episode.id).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
@@ -425,7 +430,14 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param episode episode that needs to be opened
          */
         internal fun openEpisodePendingActivity(context: Context, anime: Anime, episode: Episode): PendingIntent {
-            val newIntent = PlayerActivity.newIntent(context, anime.id, episode.id)
+            val newIntent = if (ArchiveAnime.isImageUrl(episode.url)) {
+                // A photo has nothing to play, so the notification opens the anime instead.
+                Intent(context, MainActivity::class.java).setAction(Constants.SHORTCUT_ANIME)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    .putExtra(Constants.ANIME_EXTRA, anime.id)
+            } else {
+                PlayerActivity.newIntent(context, anime.id, episode.id)
+            }
             return PendingIntent.getActivity(
                 context,
                 anime.id.hashCode(),

@@ -173,6 +173,12 @@
             android:theme="@style/Theme.Tachiyomi" />
 
         <activity
+            android:name=".ui.image.ImageViewerActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|keyboardHidden|keyboard|uiMode"
+            android:exported="false"
+            android:theme="@style/Theme.Tachiyomi" />
+
+        <activity
             android:name=".ui.webview.WebViewActivity"
             android:configChanges="uiMode|orientation|screenSize"
             android:exported="false" />

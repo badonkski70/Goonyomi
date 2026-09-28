@@ -85,6 +85,7 @@ import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreenType
 import eu.kanade.tachiyomi.ui.deeplink.anime.DeepLinkAnimeScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.image.LocalImageViewer
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.ui.player.ExternalIntents
@@ -554,6 +555,9 @@ class MainActivity : BaseActivity() {
             videoIndex: Int = -1,
             hosterList: List<Hoster>? = null,
         ) {
+            // A photo has nothing to play, it opens in the gallery instead.
+            if (LocalImageViewer.launchIfImage(context, episodeId)) return
+
             if (extPlayer) {
                 val intent = try {
                     ExternalIntents.newIntent(context, animeId, episodeId, video)
