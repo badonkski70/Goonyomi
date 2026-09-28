@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.image
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Animatable
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -101,12 +102,8 @@ class ImageViewerActivity : BaseActivity() {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
                 HorizontalPager(state = pagerState) { page ->
                     AndroidView(
-                        factory = { context ->
-                            PhotoView(context).apply {
-                                // PhotoView does the pinch zoom, pan and double tap zoom.
-                                setOnViewTapListener { _, _, _ -> finish() }
-                            }
-                        },
+                        // PhotoView does the pinch zoom, pan and double tap zoom.
+                        factory = { context -> PhotoView(context) },
                         update = { view ->
                             val context = view.context
                             val request = ImageRequest.Builder(context)
@@ -115,7 +112,13 @@ class ImageViewerActivity : BaseActivity() {
                                 .size(Size.ORIGINAL)
                                 .memoryCachePolicy(CachePolicy.DISABLED)
                                 .target { image ->
-                                    view.setImageDrawable(image.asDrawable(context.resources))
+                                    val drawable = image.asDrawable(context.resources)
+                                    view.setImageDrawable(drawable)
+                                    // A gif decodes to an AnimatedImageDrawable, which ImageView only
+                                    // starts when it is already attached and shown. An AndroidView
+                                    // update can run before that, so start it here or it sits on its
+                                    // first frame forever.
+                                    (drawable as? Animatable)?.start()
                                 }
                                 .build()
                             context.imageLoader.enqueue(request)
